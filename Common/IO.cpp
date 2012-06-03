@@ -16,7 +16,6 @@ void IO::ReadTextFile(std::string path, std::string& content){
             content+=tmp+"\n";
         }
         file.close();
-        cout<<content<<endl;
     }
 }
 void IO::WriteTextFile(std::string path, std::string& content){

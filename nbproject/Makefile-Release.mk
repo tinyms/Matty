@@ -36,7 +36,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/Common/IO.o
+	${OBJECTDIR}/Common/IO.o \
+	${OBJECTDIR}/Common/CTemplateWrap.o \
+	${OBJECTDIR}/Common/V8Engine.o
 
 
 # C Compiler Flags
@@ -72,6 +74,16 @@ ${OBJECTDIR}/Common/IO.o: Common/IO.cpp
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
+
+${OBJECTDIR}/Common/CTemplateWrap.o: Common/CTemplateWrap.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Common
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/CTemplateWrap.o Common/CTemplateWrap.cpp
+
+${OBJECTDIR}/Common/V8Engine.o: Common/V8Engine.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Common
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/V8Engine.o Common/V8Engine.cpp
 
 # Subprojects
 .build-subprojects:

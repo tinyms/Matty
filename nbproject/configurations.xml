@@ -4,8 +4,12 @@
     <logicalFolder name="HeaderFiles" displayName="头文件" projectFiles="true">
     </logicalFolder>
     <logicalFolder name="SourceFiles" displayName="源文件" projectFiles="true">
+      <itemPath>Common/CTemplateWrap.cpp</itemPath>
+      <itemPath>Common/CTemplateWrap.h</itemPath>
       <itemPath>Common/IO.cpp</itemPath>
       <itemPath>Common/IO.h</itemPath>
+      <itemPath>Common/V8Engine.cpp</itemPath>
+      <itemPath>Common/V8Engine.h</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles" displayName="资源文件" projectFiles="true">
@@ -33,14 +37,17 @@
         <ccTool>
           <incDir>
             <pElem>../../dev.tools/MinGW/msys/1.0/local/include</pElem>
+            <pElem>../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
             <pElem>../../dev.tools/MinGW/msys/1.0/local/lib</pElem>
+            <pElem>../../dev.tools/MinGW/msys/1.0/home/tinyms/v8</pElem>
           </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>ctemplate</linkerLibLibItem>
+            <linkerLibLibItem>v8_g</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

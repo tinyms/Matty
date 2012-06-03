@@ -36,7 +36,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/Common/IO.o
+	${OBJECTDIR}/Common/IO.o \
+	${OBJECTDIR}/Common/CTemplateWrap.o \
+	${OBJECTDIR}/Common/V8Engine.o
 
 
 # C Compiler Flags
@@ -53,7 +55,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -lctemplate
+LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -L../../dev.tools/MinGW/msys/1.0/home/tinyms/v8 -lctemplate -lv8_g
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -66,12 +68,22 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/matty.exe: ${OBJECTFILES}
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
 ${OBJECTDIR}/Common/IO.o: Common/IO.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
+
+${OBJECTDIR}/Common/CTemplateWrap.o: Common/CTemplateWrap.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Common
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/CTemplateWrap.o Common/CTemplateWrap.cpp
+
+${OBJECTDIR}/Common/V8Engine.o: Common/V8Engine.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Common
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/V8Engine.o Common/V8Engine.cpp
 
 # Subprojects
 .build-subprojects:

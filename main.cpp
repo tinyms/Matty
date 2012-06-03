@@ -9,11 +9,20 @@
 #include <iostream>  
 #include <string>
 #include <ctemplate/template.h>
+#include "Common/IO.h"
+#include "Common/V8Engine.h"
 using namespace std;
 /*
  * 
  */
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
+    if(argc>1){
+        string script;
+        IO::ReadTextFile(argv[1],script);
+        cout<<script<<endl;
+        V8Engine::Execute(script.c_str());
+    }
+    /**
     ctemplate::TemplateDictionary dict("example");
     int winnings = rand() % 100000;
     dict.SetValue("NAME", "John Smith");
@@ -26,7 +35,7 @@ int main(int argc, char** argv) {
     }
     string output;
     ctemplate::ExpandTemplate("example.tpl", ctemplate::DO_NOT_STRIP, &dict, &output);
-    //std::cout << output;
+     * */
     return 0;
 }
 
