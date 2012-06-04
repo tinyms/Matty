@@ -15,8 +15,10 @@ void V8Engine::Execute(const char* script_text){
     ctemplate_template->SetClassName(String::New("ctemplate_dictionary"));
     Handle<ObjectTemplate> ctemplate_prototype = ctemplate_template->PrototypeTemplate();
     ctemplate_prototype->Set("setValue",FunctionTemplate::New(CTemplateDictionarySetValue));
+    ctemplate_prototype->Set("addSectionDictionary",FunctionTemplate::New(CTemplateDictionaryAddSectionDictionary));
+    ctemplate_prototype->Set("showSection",FunctionTemplate::New(CTemplateDictionaryShowSection));
     Handle<ObjectTemplate> ctemplate_inst = ctemplate_template->InstanceTemplate(); 
-    ctemplate_inst->SetInternalFieldCount(1);
+    ctemplate_inst->SetInternalFieldCount(2);
     ///
     global->Set(String::New("ctemplate_dictionary"),ctemplate_template);
     global->Set(String::New("ctemplate_render"),FunctionTemplate::New(CTemplateRender));

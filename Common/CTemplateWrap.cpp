@@ -7,6 +7,8 @@ Handle<Value> CTemplateDictionaryConstructor(const Arguments& args){
     String::Utf8Value name(args[0]);
     ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary(*name);
     obj->SetInternalField(0,External::New(dict));
+    map<string,ctemplate::TemplateDictionary*>* sub_dict_map = new map<string,ctemplate::TemplateDictionary*>();
+    obj->SetInternalField(1,External::New(sub_dict_map));
     return obj;
 }
 
@@ -34,13 +36,65 @@ Handle<Value> CTemplateDictionarySetValue(const Arguments& args){
     return Undefined();
 }
 
+/* 
+ * dict.addSectionDictionary("sub_dict",sub_dict);
+ *  */
 Handle<Value> CTemplateDictionaryAddSectionDictionary(const Arguments& args){
+    String::Utf8Value section_name(args[0]);
+    String::Utf8Value name(args[1]);
+    //this
+    Local<Object> self = args.Holder();
+    //main
+    Local<External> wrap = Local<External>::Cast(self->GetInternalField(0));
+    ctemplate::TemplateDictionary* this_ = static_cast<ctemplate::TemplateDictionary*>(wrap->Value());
+    
+    //Sub
+    Local<External> wrap_map = Local<External>::Cast(self->GetInternalField(1));
+    map<string,ctemplate::TemplateDictionary*>* this_subs = static_cast<map<string,ctemplate::TemplateDictionary*>*>(wrap_map->Value());
+    if(this_subs==NULL){
+        cout<<"Map Empty."<<endl;
+    }
+    //Exists
+    string key(*section_name);
+    ctemplate::TemplateDictionary* sub = NULL;
+    cout<<"Map Empty."<<endl;
+    if(this_subs->find(*section_name)!=this_subs->end()){
+        cout<<30000<<endl;
+        sub = (*this_subs)[key];
+    }else{
+        cout<<40000<<endl;
+        sub = this_->AddSectionDictionary(*section_name);
+        (*this_subs)[key]=sub;
+        
+    }
+    cout<<"3Map Empty."<<endl;
+    if(sub!=NULL){
+        cout<<20000<<endl;
+        if(args[1]->IsString()){
+            String::Utf8Value value(args[2]);
+            sub->SetValue(*name,*value);
+        }else if(args[1]->IsInt32()){
+            sub->SetIntValue(*name,args[2]->Int32Value());
+        }else if(args[1]->IsNumber()){
+            cout<<args.Length()<<endl;
+            if(args.Length()==3){
+                String::Utf8Value format(args[3]);
+                sub->SetFormattedValue(*name,*format,args[2]->NumberValue());
+            }else{
+                sub->SetFormattedValue(*name,"%.2f",args[2]->NumberValue());
+            }
+        }
+    }
+    return Undefined();
+}
+
+Handle<Value> CTemplateDictionaryShowSection(const Arguments& args){
     String::Utf8Value name(args[0]);
     Local<Object> self = args.Holder();
     Local<External> wrap = Local<External>::Cast(self->GetInternalField(0));
     void *ptr = wrap->Value();
     ctemplate::TemplateDictionary* td = static_cast<ctemplate::TemplateDictionary*>(ptr);
-    ctemplate::TemplateDictionary* sub = td->AddSectionDictionary(*name);
+    td->ShowSection(*name);
     return Undefined();
 }
 

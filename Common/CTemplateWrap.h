@@ -10,6 +10,7 @@
 
 #include <iostream>  
 #include <string>
+#include <map>
 #include <ctemplate/template.h>
 #include <v8.h>
 using namespace v8;
@@ -17,6 +18,7 @@ using namespace std;
 extern Handle<Value> CTemplateDictionaryConstructor(const Arguments& args);
 extern Handle<Value> CTemplateDictionarySetValue(const Arguments& args);
 extern Handle<Value> CTemplateDictionaryAddSectionDictionary(const Arguments& args);
+extern Handle<Value> CTemplateDictionaryShowSection(const Arguments& args);
 extern Handle<Value> CTemplateRender(const Arguments& args);
 class CTemplateWrap {
 public:
