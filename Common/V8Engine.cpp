@@ -11,15 +11,15 @@ void V8Engine::Execute(const char* script_text){
     HandleScope handle_scope;
     //Reg
     Handle<ObjectTemplate> global = ObjectTemplate::New();
-    Handle<FunctionTemplate> ctemplate_template = FunctionTemplate::New(CTemplateConstructor);
-    ctemplate_template->SetClassName(String::New("CTemplate"));
+    Handle<FunctionTemplate> ctemplate_template = FunctionTemplate::New(CTemplateDictionaryConstructor);
+    ctemplate_template->SetClassName(String::New("ctemplate_dictionary"));
     Handle<ObjectTemplate> ctemplate_prototype = ctemplate_template->PrototypeTemplate();
-    ctemplate_prototype->Set("SetValue",FunctionTemplate::New(CTemplateSetValue));
+    ctemplate_prototype->Set("setValue",FunctionTemplate::New(CTemplateDictionarySetValue));
     Handle<ObjectTemplate> ctemplate_inst = ctemplate_template->InstanceTemplate(); 
     ctemplate_inst->SetInternalFieldCount(1);
     ///
-    global->Set(String::New("CTemplate"),ctemplate_template);
-    global->Set(String::New("Render"),FunctionTemplate::New(CTemplateRender));
+    global->Set(String::New("ctemplate_dictionary"),ctemplate_template);
+    global->Set(String::New("ctemplate_render"),FunctionTemplate::New(CTemplateRender));
     //End Reg
     Persistent<Context> context = Context::New(NULL,global);
     Context::Scope context_scope(context);
