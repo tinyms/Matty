@@ -19,7 +19,11 @@ extern Handle<Value> CTemplateDictionaryConstructor(const Arguments& args);
 extern Handle<Value> CTemplateDictionarySetValue(const Arguments& args);
 extern Handle<Value> CTemplateDictionaryAddSectionDictionary(const Arguments& args);
 extern Handle<Value> CTemplateDictionaryShowSection(const Arguments& args);
+extern Handle<Value> CTemplateLog(const Arguments& args);
+extern Handle<Value> CTemplateReadText(const Arguments& args);
+extern Handle<Value> CTemplateWriteText(const Arguments& args);
 extern Handle<Value> CTemplateRender(const Arguments& args);
+extern void IteratorJsObject(ctemplate::TemplateDictionary* dict,Local<Object> items);
 class CTemplateWrap {
 public:
     CTemplateWrap();

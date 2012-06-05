@@ -63,6 +63,10 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../dev.tools/MinGW/msys/1.0/local/include</pElem>
+            <pElem>../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -70,6 +74,16 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>../../dev.tools/MinGW/msys/1.0/local/lib</pElem>
+            <pElem>../../dev.tools/MinGW/msys/1.0/home/tinyms/v8</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>ctemplate</linkerLibLibItem>
+            <linkerLibLibItem>v8</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
     </conf>
   </confs>

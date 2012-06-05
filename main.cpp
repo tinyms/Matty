@@ -19,7 +19,6 @@ int main(int argc, char* argv[]) {
     if(argc>1){
         string script;
         IO::ReadTextFile(argv[1],script);
-        cout<<script<<endl;
         V8Engine::Execute(script.c_str());
     }
     /**

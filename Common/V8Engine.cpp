@@ -11,6 +11,12 @@ void V8Engine::Execute(const char* script_text){
     HandleScope handle_scope;
     //Reg
     Handle<ObjectTemplate> global = ObjectTemplate::New();
+    Handle<ObjectTemplate> ctemplate_object = ObjectTemplate::New();
+    ctemplate_object->Set(String::New("render"),FunctionTemplate::New(CTemplateRender));
+    ctemplate_object->Set(String::New("read"),FunctionTemplate::New(CTemplateReadText));
+    ctemplate_object->Set(String::New("write"),FunctionTemplate::New(CTemplateWriteText));
+    ctemplate_object->Set(String::New("log"),FunctionTemplate::New(CTemplateLog));
+    /*
     Handle<FunctionTemplate> ctemplate_template = FunctionTemplate::New(CTemplateDictionaryConstructor);
     ctemplate_template->SetClassName(String::New("ctemplate_dictionary"));
     Handle<ObjectTemplate> ctemplate_prototype = ctemplate_template->PrototypeTemplate();
@@ -19,9 +25,10 @@ void V8Engine::Execute(const char* script_text){
     ctemplate_prototype->Set("showSection",FunctionTemplate::New(CTemplateDictionaryShowSection));
     Handle<ObjectTemplate> ctemplate_inst = ctemplate_template->InstanceTemplate(); 
     ctemplate_inst->SetInternalFieldCount(2);
-    ///
-    global->Set(String::New("ctemplate_dictionary"),ctemplate_template);
-    global->Set(String::New("ctemplate_render"),FunctionTemplate::New(CTemplateRender));
+    */
+    global->Set(String::New("ctemplate"),ctemplate_object);
+    //global->Set(String::New("ctemplate_dictionary"),ctemplate_template);
+    //global->Set(String::New("ctemplate_render"),FunctionTemplate::New(CTemplateRender));
     //End Reg
     Persistent<Context> context = Context::New(NULL,global);
     Context::Scope context_scope(context);
