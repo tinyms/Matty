@@ -55,7 +55,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -L../../dev.tools/MinGW/msys/1.0/home/tinyms/v8 -L../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0/lib -lctemplate -lv8_g -lfltk2 -lfltk2_gl -lfltk2_glut -lfltk2_images -lfltk2_jpeg -lfltk2_png -lfltk2_z -lgdi32 -lws2_32 -luuid -lcomdlg32 -lole32 -lmsimg32
+LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -L../../dev.tools/MinGW/msys/1.0/home/tinyms/v8 -L../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0/lib -lctemplate_nothreads_debug -lv8_g -lfltk2 -lfltk2_gl -lfltk2_glut -lfltk2_images -lfltk2_jpeg -lfltk2_png -lfltk2_z -lgdi32 -lws2_32 -luuid -lcomdlg32 -lole32 -lmsimg32
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

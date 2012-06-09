@@ -7,7 +7,7 @@
 
 #include "V8Engine.h"
 #include "CTemplateWrap.h"
-void V8Engine::Execute(const char* script_text){
+void V8Engine::Execute(const char* script_text,fltk::Browser* console){
     HandleScope handle_scope;
     //Reg
     Handle<ObjectTemplate> global = ObjectTemplate::New();

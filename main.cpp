@@ -23,7 +23,7 @@
 #include <fltk/TextEditor.h>
 #include <fltk/MenuBuild.h>
 #include <fltk/Browser.h>
-
+#include <fltk/Threads.h>
 #include "Common/IO.h"
 #include "Common/V8Engine.h"
 
@@ -550,8 +550,9 @@ void set_title(fltk::Window* w) {
         else strcpy(title, filename);
     }
 
-    if (changed) strcat(title, " (modified)");
-
+    if (changed) {
+        strcat(title, " (modified)");
+    }
     w->label(title);
 }
 
@@ -615,6 +616,19 @@ void quit_cb(fltk::Widget*, void*) {
 void replace_cb(fltk::Widget*, void* v) {
     EditorWindow* e = (EditorWindow*) v;
     e->replace_dlg->show();
+}
+
+void log(const char* msg){
+    cout<<msg<<endl;
+}
+
+void run_js_script_cb(fltk::Widget* menu, void* v) {
+    EditorWindow* e = (EditorWindow*) v;
+    fltk::lock();
+    menu->activate(0);
+    V8Engine::Execute(e->editor->text(),e->console);
+    menu->activate(1);
+    fltk::unlock();
 }
 
 void replace2_cb(fltk::Widget*, void* v) {
@@ -738,22 +752,27 @@ static void build_menus(fltk::MenuBar * menu, fltk::Widget *w) {
     new fltk::Item("&Replace...", fltk::COMMAND + 'R', replace_cb);
     new fltk::Item("Re&place Again", fltk::COMMAND + 'T', replace2_cb);
     g->end();
-    new fltk::Item("Run", 0, replace2_cb);
+    new fltk::Item("Run", 0, run_js_script_cb);
     menu->end();
 }
+const char *console_column_names[] = {"Tag", "Message", 0};
+int console_column_widths[] = {70, -1, 0};
 
 fltk::Window* new_view() {
     EditorWindow* w = new EditorWindow(800, 600, title);
     w->begin();
     fltk::MenuBar* m = new fltk::MenuBar(0, 0, 800, 21);
     build_menus(m, w);
-    w->editor = new fltk::TextEditor(0, 21, 800, 374);//5px for space
+    w->editor = new fltk::TextEditor(0, 21, 800, 374); //5px for space
     w->editor->buffer(textbuf);
     w->editor->highlight_data(stylebuf, styletable,
             sizeof (styletable) / sizeof (styletable[0]),
             'A', style_unfinished_cb, 0);
     w->editor->textfont(fltk::COURIER);
-    w->console = new fltk::Browser(0,400,800,200);
+    w->console = new fltk::Browser(0, 400, 800, 200);
+    w->console->column_widths(console_column_widths);
+    w->console->column_labels(console_column_names);
+    w->console->add("Normal\tOK.", w->console);
     w->end();
     w->resizable(w->editor);
     w->callback((fltk::Callback *)close_cb, w);
@@ -771,15 +790,23 @@ fltk::Window* new_view() {
 }
 
 int main(int argc, char **argv) {
+    fltk::lock();
     textbuf = new fltk::TextBuffer(0);
     style_init();
     fltk::Window* window = new_view();
     window->show(1, argv);
+    window->label(title); // Prevent from displaying "Untitled.txt" before its time...
     if (argc > 1) {
-        window->label(" "); // Prevent from displaying "Untitled.txt" before its time...
         load_file(argv[1], -1);
     }
-    return fltk::run();
+    //  fltk::run();
+    while (window->visible()) {
+        fltk::wait();
+        //void* m = fltk::thread_message();
+        //printf("Received message: %p\n", m);
+    }
+    return 0;
+    //return fltk::run();
     //if (argc > 1) {
     //    std::string script;
     //    IO::ReadTextFile(argv[1], script);

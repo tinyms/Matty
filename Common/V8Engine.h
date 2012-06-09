@@ -8,18 +8,18 @@
 #ifndef V8ENGINE_H
 #define	V8ENGINE_H
 #include <string>
+#include <fltk/Browser.h>
 #include <v8.h>
 using namespace std;
 using namespace v8;
 class V8Engine {
 public:
-    static void Execute(const char* script_text);
+    static void Execute(const char* script_text,fltk::Browser* console);
 public:
     V8Engine();
     V8Engine(const V8Engine& orig);
     virtual ~V8Engine();
 private:
-
 };
 
 #endif	/* V8ENGINE_H */
