@@ -800,12 +800,15 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         load_file(argv[1], -1);
     }
+    int count = 0;
     while (window->visible()) {
         fltk::wait();
         void* m = fltk::thread_message();
         if(m!=0){
+            cout<<count<<endl;
             MessageX* msg = static_cast<MessageX*> (m);
             window->console->add((msg->category+"\t"+msg->message).c_str());
+            count++;
         }
     }
     return 0;

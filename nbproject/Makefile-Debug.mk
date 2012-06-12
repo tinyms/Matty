@@ -55,7 +55,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -L../../dev.tools/MinGW/msys/1.0/home/tinyms/v8 -L../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0/lib -lctemplate_nothreads_debug -lv8_g -lfltk2 -lfltk2_gl -lfltk2_glut -lfltk2_images -lfltk2_jpeg -lfltk2_png -lfltk2_z -lgdi32 -lws2_32 -luuid -lcomdlg32 -lole32 -lmsimg32
+LDLIBSOPTIONS=-L../../dev.tools/MinGW/msys/1.0/local/lib -L../../dev.tools/MinGW/msys/1.0/home/tinyms/v8 -lctemplate_nothreads_debug -lv8_g -lfltk2 -lfltk2_gl -lfltk2_glut -lfltk2_images -lfltk2_jpeg -lfltk2_png -lfltk2_z -lgdi32 -lws2_32 -luuid -lcomdlg32 -lole32 -lmsimg32
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -68,22 +68,22 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/matty.exe: ${OBJECTFILES}
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
 ${OBJECTDIR}/Common/IO.o: Common/IO.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
 
 ${OBJECTDIR}/Common/CTemplateWrap.o: Common/CTemplateWrap.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/CTemplateWrap.o Common/CTemplateWrap.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/CTemplateWrap.o Common/CTemplateWrap.cpp
 
 ${OBJECTDIR}/Common/V8Engine.o: Common/V8Engine.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/home/tinyms/fltk-2.0 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/V8Engine.o Common/V8Engine.cpp
+	$(COMPILE.cc) -g -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/V8Engine.o Common/V8Engine.cpp
 
 # Subprojects
 .build-subprojects:

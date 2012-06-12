@@ -144,9 +144,9 @@ Handle<Value> CTemplateLog(const Arguments& args){
     MessageX* msg_ = new MessageX();
     msg_->category="Normal";
     msg_->message = *msg;
-    fltk::lock();
+    //fltk::lock();
     fltk::awake(msg_);
-    fltk::unlock();
+    //fltk::unlock();
     return Undefined();
 }
 Handle<Value> CTemplateReadText(const Arguments& args){
