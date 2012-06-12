@@ -84,6 +84,46 @@ Handle<Value> CTemplateDictionaryAddSectionDictionary(const Arguments& args) {
     return Undefined();
 }
 
+Handle<Value> CWrapConsoleGridViewConstructor(const Arguments& args){
+    //parse gridvew local value external wrap
+    Handle<Object> console = Handle<Object>::Cast(args[0]);
+    Local<External> wrap = Local<External>::Cast(console->GetInternalField(0));
+    fltk::Browser* gridview = static_cast<fltk::Browser*> (wrap->Value());
+    //put this object as a inner prop
+    Handle<Object> obj = args.This();
+    HandleScope handle_scope;
+    obj->SetInternalField(0, External::New(gridview));
+    return obj;
+}
+
+Handle<Value> CWrapConsoleGridAppendRowFunction(const Arguments& args){
+    Local<Object> self = args.Holder();
+    Local<External> wrap = Local<External>::Cast(self->GetInternalField(0));
+    fltk::Browser* gridview = static_cast<fltk::Browser*> (wrap->Value());
+    if(gridview==NULL){
+        cout<<"gridview==NULL"<<endl;
+        return Undefined();
+    }
+    fltk::lock();
+    if(args.Length()==0){
+        gridview->add("Normal\t ",gridview);
+    }else if(args.Length()==1){
+        String::Utf8Value message(args[0]);
+        string msg(*message);
+        msg="Normal\t"+msg;
+        gridview->add(msg.c_str(),gridview);
+    }
+    else if(args.Length()==2){
+        String::Utf8Value tag(args[0]);
+        String::Utf8Value message(args[1]);
+        string tag_(*tag);
+        string msg(*message);
+        gridview->add((tag_+"\t"+msg).c_str(),gridview);
+    }
+    fltk::unlock();
+    return Undefined();
+}
+
 Handle<Value> CTemplateDictionaryShowSection(const Arguments& args) {
     String::Utf8Value name(args[0]);
     Local<Object> self = args.Holder();
@@ -101,6 +141,12 @@ Handle<Value> CTemplateLog(const Arguments& args){
     }
     String::Utf8Value msg(args[0]);
     cout<<*msg<<endl;
+    MessageX* msg_ = new MessageX();
+    msg_->category="Normal";
+    msg_->message = *msg;
+    fltk::lock();
+    fltk::awake(msg_);
+    fltk::unlock();
     return Undefined();
 }
 Handle<Value> CTemplateReadText(const Arguments& args){

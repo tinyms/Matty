@@ -11,8 +11,12 @@
 #include <iostream>  
 #include <string>
 #include <map>
+#include <fltk/run.h>
+#include <fltk/Threads.h>
+#include <fltk/Browser.h>
 #include <ctemplate/template.h>
 #include <v8.h>
+#include "DataType.h"
 using namespace v8;
 using namespace std;
 extern Handle<Value> CConsoleConstructor(const Arguments& args);
@@ -25,6 +29,8 @@ extern Handle<Value> CTemplateLog(const Arguments& args);
 extern Handle<Value> CTemplateReadText(const Arguments& args);
 extern Handle<Value> CTemplateWriteText(const Arguments& args);
 extern Handle<Value> CTemplateRender(const Arguments& args);
+extern Handle<Value> CWrapConsoleGridViewConstructor(const Arguments& args);
+extern Handle<Value> CWrapConsoleGridAppendRowFunction(const Arguments& args);
 extern void IteratorJsObject(ctemplate::TemplateDictionary* dict,Local<Object> items);
 class CTemplateWrap {
 public:

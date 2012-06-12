@@ -6,6 +6,7 @@
     <logicalFolder name="SourceFiles" displayName="源文件" projectFiles="true">
       <itemPath>Common/CTemplateWrap.cpp</itemPath>
       <itemPath>Common/CTemplateWrap.h</itemPath>
+      <itemPath>Common/DataType.h</itemPath>
       <itemPath>Common/IO.cpp</itemPath>
       <itemPath>Common/IO.h</itemPath>
       <itemPath>Common/V8Engine.cpp</itemPath>

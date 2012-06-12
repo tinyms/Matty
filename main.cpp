@@ -26,6 +26,7 @@
 #include <fltk/Threads.h>
 #include "Common/IO.h"
 #include "Common/V8Engine.h"
+#include "Common/DataType.h"
 
 /*
  * 
@@ -713,10 +714,10 @@ void saveas_cb() {
     if (newfile != NULL) save_file(newfile);
 }
 
-fltk::Window* new_view();
+EditorWindow* new_view();
 
 void view_cb(fltk::Widget*, void*) {
-    fltk::Window* w = new_view();
+    EditorWindow* w = new_view();
     w->show();
 }
 
@@ -758,7 +759,7 @@ static void build_menus(fltk::MenuBar * menu, fltk::Widget *w) {
 const char *console_column_names[] = {"Tag", "Message", 0};
 int console_column_widths[] = {70, -1, 0};
 
-fltk::Window* new_view() {
+EditorWindow* new_view() {
     EditorWindow* w = new EditorWindow(800, 600, title);
     w->begin();
     fltk::MenuBar* m = new fltk::MenuBar(0, 0, 800, 21);
@@ -793,25 +794,20 @@ int main(int argc, char **argv) {
     fltk::lock();
     textbuf = new fltk::TextBuffer(0);
     style_init();
-    fltk::Window* window = new_view();
+    EditorWindow* window = new_view();
     window->show(1, argv);
     window->label(title); // Prevent from displaying "Untitled.txt" before its time...
     if (argc > 1) {
         load_file(argv[1], -1);
     }
-    //  fltk::run();
     while (window->visible()) {
         fltk::wait();
-        //void* m = fltk::thread_message();
-        //printf("Received message: %p\n", m);
+        void* m = fltk::thread_message();
+        if(m!=0){
+            MessageX* msg = static_cast<MessageX*> (m);
+            window->console->add((msg->category+"\t"+msg->message).c_str());
+        }
     }
     return 0;
-    //return fltk::run();
-    //if (argc > 1) {
-    //    std::string script;
-    //    IO::ReadTextFile(argv[1], script);
-    //    V8Engine::Execute(script.c_str());
-    //}
-    //return 0;
 }
 
