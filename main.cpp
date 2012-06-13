@@ -91,6 +91,7 @@ const char *code_types[] = {// List of known C/C++ types...
     "bool",
     "char",
     "class",
+    "console",
     "const",
     "const_cast",
     "ctemplate",
@@ -103,6 +104,7 @@ const char *code_types[] = {// List of known C/C++ types...
     "friend",
     "inline",
     "int",
+    "io",
     "long",
     "mutable",
     "namespace",
@@ -756,7 +758,7 @@ static void build_menus(fltk::MenuBar * menu, fltk::Widget *w) {
     new fltk::Item("Run", 0, run_js_script_cb);
     menu->end();
 }
-const char *console_column_names[] = {"Tag", "Message", 0};
+const char *console_column_names[] = {"Category", "Message", 0};
 int console_column_widths[] = {70, -1, 0};
 
 EditorWindow* new_view() {
@@ -773,7 +775,6 @@ EditorWindow* new_view() {
     w->console = new fltk::Browser(0, 400, 800, 200);
     w->console->column_widths(console_column_widths);
     w->console->column_labels(console_column_names);
-    w->console->add("Normal\tOK.", w->console);
     w->end();
     w->resizable(w->editor);
     w->callback((fltk::Callback *)close_cb, w);
@@ -800,15 +801,13 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         load_file(argv[1], -1);
     }
-    int count = 0;
     while (window->visible()) {
         fltk::wait();
         void* m = fltk::thread_message();
-        if(m!=0){
-            cout<<count<<endl;
-            MessageX* msg = static_cast<MessageX*> (m);
-            window->console->add((msg->category+"\t"+msg->message).c_str());
-            count++;
+        if(m!=NULL){
+            //MessageX* msg = static_cast<MessageX*> (m);
+            //cout<<msg<<endl;
+            //window->console->add(msg);
         }
     }
     return 0;
