@@ -81,6 +81,7 @@
             <pElem>../../dev.tools/MinGW/msys/1.0/local/include</pElem>
             <pElem>../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include</pElem>
           </incDir>
+          <commandLine>-mwindows</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -96,6 +97,19 @@
           <linkerLibItems>
             <linkerLibLibItem>ctemplate</linkerLibLibItem>
             <linkerLibLibItem>v8</linkerLibLibItem>
+            <linkerLibLibItem>fltk2</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_gl</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_glut</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_images</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_jpeg</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_png</linkerLibLibItem>
+            <linkerLibLibItem>fltk2_z</linkerLibLibItem>
+            <linkerLibLibItem>gdi32</linkerLibLibItem>
+            <linkerLibLibItem>ws2_32</linkerLibLibItem>
+            <linkerLibLibItem>uuid</linkerLibLibItem>
+            <linkerLibLibItem>comdlg32</linkerLibLibItem>
+            <linkerLibLibItem>ole32</linkerLibLibItem>
+            <linkerLibLibItem>msimg32</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

@@ -41,7 +41,6 @@ Handle<Value> CTemplateDictionarySetValue(const Arguments& args) {
 Handle<Value> CWrapConsoleGridAppendRowFunction(const Arguments& args){
     Local<Object> self = args.Holder();
     Local<Value> browser = self->Get(String::New("browser"));
-    External::Unwrap(browser);
     fltk::Browser* gridview = static_cast<fltk::Browser*> (External::Unwrap(browser));
     if(gridview==NULL){
         return Undefined();
