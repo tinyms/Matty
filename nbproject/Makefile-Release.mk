@@ -36,8 +36,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/Common/IO.o \
 	${OBJECTDIR}/Common/CTemplateWrap.o \
+	${OBJECTDIR}/Common/IO.o \
 	${OBJECTDIR}/Common/V8Engine.o
 
 
@@ -70,15 +70,15 @@ ${OBJECTDIR}/main.o: main.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
-${OBJECTDIR}/Common/IO.o: Common/IO.cpp 
-	${MKDIR} -p ${OBJECTDIR}/Common
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
-
 ${OBJECTDIR}/Common/CTemplateWrap.o: Common/CTemplateWrap.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/CTemplateWrap.o Common/CTemplateWrap.cpp
+
+${OBJECTDIR}/Common/IO.o: Common/IO.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Common
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../dev.tools/MinGW/msys/1.0/local/include -I../../dev.tools/MinGW/msys/1.0/home/tinyms/v8/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Common/IO.o Common/IO.cpp
 
 ${OBJECTDIR}/Common/V8Engine.o: Common/V8Engine.cpp 
 	${MKDIR} -p ${OBJECTDIR}/Common
