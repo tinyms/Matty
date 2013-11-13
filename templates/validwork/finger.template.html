@@ -1,0 +1,231 @@
+{% extends "../workbench/master.html" %}
+{% block title %}指纹模版{% end %}
+{% block header %}
+<script type="text/javascript" src="/ajax/tinyms.validwork.FingerAndTaskAssign.js"></script>
+<script type="text/javascript">
+{% module TermTaxonomyJavascript(name="OrgMap",taxonomy="Org") %}
+{% module TermTaxonomyJavascript(name="SexMap",taxonomy="Sex") %}
+var current_selected_user_id = 0;
+function datatable_render(id,k,v,row){
+	if(id=="ValidWorkArchivesDataView"){
+		if(k=="sex"){
+			return SexMap[v];
+		}else if(k=="org_id"){
+			return OrgMap[v];
+		}
+	}
+	return v;
+}
+function tree_combobox_select_completed(id,vals){
+	if(id=="OrgTreeComboBox"){
+		ValidWorkArchivesDataView_.Refresh();
+	}
+}
+function datatable_server_params(id,aoData){
+	if(id=="ValidWorkArchivesDataView"){
+		aoData.push({name:"org_id",value:$("#OrgTreeComboBox").val()});
+	}
+}
+function view_and_edit_user_finger(elem,v){
+    {% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+    $("#schedule_task").hide();
+    $("#finger_tpl").show();
+    var row = ValidWorkArchivesDataView_.GetRow(v);
+    $("#finger_tpl_usrname").html(row.name);
+    current_selected_user_id = row.id;
+    {% end %}
+}
+function view_and_edit_user_schduletask(elem,v){
+    {% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+    $("#finger_tpl").hide();
+    $("#schedule_task").show();
+    var row = ValidWorkArchivesDataView_.GetRow(v);
+    $("#schedule_task_usrname").html(row.name);
+    current_selected_user_id = row.id;
+    $("#schedule_task :radio").each(function(){
+        $(this).prop("checked",false);
+        if(row.st_id==parseInt($(this).val())){
+            $(this).prop("checked",true);
+        }
+    });
+    {% end %}
+}
+function schedule_task_assign(elem){
+    {% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+    var st_id = $(elem).val();
+    var params_ = {id:current_selected_user_id,st_id:st_id};
+    validwork.controller.FingerAndTaskAssign.task_assign(params_,function(b,data){
+        if(b){
+            var msg = data[0];
+            if (msg == "success") {
+                ValidWorkArchivesDataView_.Refresh();
+                toastr.success("保存成功!")
+            } else {
+                toastr.error("保存失败!")
+            }
+		}
+    });
+    {% end %}
+}
+function datatable_render_actionbar(id,k,v,row){
+	var action_btns = "";
+
+	if(id=="ValidWorkArchivesDataView"){
+        {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+		action_btns += '<a class="btn-link" title="查看、编辑用户指纹" onclick="view_and_edit_user_finger(this,' + v + ');"><i class="icon-thumbs-up"></i></a>';
+        {% end %}
+        {% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+        action_btns += '<a class="btn-link" title="编辑用户考勤计划" onclick="view_and_edit_user_schduletask(this,' + v + ');"><i class="icon-calendar"></i></a>';
+        {% end %}
+	}
+	return action_btns;
+}
+function event_timer(){
+    {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+        $.post("/api/tinyms.validwork.finger.template/value",{},function(data){
+            var tpl_ = data[0];
+            if(timer!=null&&data[0]!=""){
+                clearInterval(timer);
+                $.post("/api/tinyms.validwork.finger.template/clear",{},function(data){
+                    if(data[0]=="success"){
+                        //save finger tpl
+                        var params_ = {
+                            index:current_select_user_finger_index,
+                            archives_id:current_selected_user_id,
+                            tpl:tpl_
+                        };
+                        validwork.controller.FingerAndTaskAssign.finger_tpl_save(params_,function(b,data){
+                            if(b){
+                                var msg = data[0];
+                                if (msg == "success") {
+                                    finger_index_panel_disable(false);
+                                    toastr.success("保存成功!")
+                                } else {
+                                    toastr.error("保存失败!")
+                                }
+                            }
+                        });
+                    }
+                },"json");
+            }
+        },"json");
+    {% end %}
+}
+function finger_index_panel_disable(bool){
+   $("#finger_index_panel :radio").each(function(){
+        $(this).prop("disabled",bool);
+    });
+}
+function cancel_fingertpl_reg(){
+    clearInterval(timer);
+    finger_index_panel_disable(false);
+    $("#finger_tpl_panel_menu").hide();
+}
+var current_select_user_finger_index = "";
+var timer = null;
+$(document).ready(function(){
+	$("#current_task_name").html("可用");
+    $("#schedule_task").hide();
+    $("#finger_tpl_panel_menu").hide();
+    {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+    $("#finger_template_keygen").click(function(){
+        $.post("/api/tinyms.validwork.finger.template/kengen",{},function(data){
+            $("#finger_template_key").val(data[0]);
+        },"json");
+    });
+    $("#finger_index_panel :radio").each(function(){
+        $(this).click(function(){
+            if(current_selected_user_id==0){
+                toastr.error("请点击右边手型图标选择人员!")
+                $(this).prop("checked",false);
+                return;
+            }
+            current_select_user_finger_index = $(this).val();
+            finger_index_panel_disable(true);
+            timer = setInterval(event_timer,1000);
+            $("#finger_tpl_panel_menu").show();
+        });
+    });
+    {% end %}
+});
+</script>
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-book"></i>指纹模版</h4>
+    </div>
+	<div class="row">
+            <div class="col-lg-12">
+                {% module TreeComboBox(id="OrgTreeComboBox",taxonomy="Org",point_list="tinyms.view.orgtree.list",placeholder="选择(组织/部门)") %}
+            </div>
+        </div>
+    <div class="row" style="margin-top:15px;">
+        <div class="col-lg-8">
+            <div class="panel">
+                <div class="panel-heading">用户列表</div>
+                <div class="panel-body">
+                    {% module DataView(id="ValidWorkArchivesDataView",
+                    view="validwork.view.ValidWorkArchives",
+                    cols=['name','sex','org_id','st_name'],
+                    titles=['姓名','性别','部门','任务计划'],
+                    search_tip = "可搜索姓名",
+                    point_list = "tinyms.entity.archives.list"
+                    ) %}
+                    {% module panel_start("ValidWorkArchivesDataView") %}
+                    {% module datagrid_form_start("ValidWorkArchivesDataView") %}
+                    <div class="form-group">
+                    <label for="name" class="col-lg-3 control-label">名称</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control " id="name" name="name" maxlength="60" required>
+                    </div>
+                    </div>
+                    {% module datagrid_form_end("ValidWorkArchivesDataView","validwork.view.ValidWorkArchives","view") %}
+                    {% module panel_end() %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+            <div class="alert alert-warning">生成的临时密钥供客户端录入指纹认证之用</div>
+            <div class="input-group">
+              <span class="input-group-addon">密钥</span>
+              <input class="form-control" id="finger_template_key"/>
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button" id="finger_template_keygen">生成</button>
+              </span>
+            </div>
+            <div class="panel" id="finger_tpl" style="margin-top: 10px;">
+                <div class="panel-heading">
+                    <span id="finger_tpl_usrname" style="color: red;"></span> 指纹模版
+                    <ul class="nav nav-pills pull-right" id="finger_tpl_panel_menu">
+                        <li><a class="btn-link" title="取消" onclick="cancel_fingertpl_reg();"><i class="icon-mail-reply"></i></a></li>
+                    </ul>
+                </div>
+                <div class="list-group" id="finger_index_panel">
+                    <div class="list-group-item"><input type="radio" id="finger_index_1" name="finger_index" value="1"/> 右手拇指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_2" name="finger_index" value="2"/> 右手食指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_3" name="finger_index" value="3"/> 右手中指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_4" name="finger_index" value="4"/> 右手无名指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_5" name="finger_index" value="5"/> 右手小指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_6" name="finger_index" value="6"/> 左手拇指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_7" name="finger_index" value="7"/> 左手食指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_8" name="finger_index" value="8"/> 左手中指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_9" name="finger_index" value="9"/> 左手无名指</div>
+					<div class="list-group-item"><input type="radio" id="finger_index_10" name="finger_index" value="10"/> 左手小指</div>
+                    <div class="list-group-item" style="color: darkgray;">* 同一手指可以指纹覆盖</div>
+                </div>
+            </div>
+            {% end %}
+			<div class="panel" id="schedule_task" style="margin-top: 10px;">
+				<div class="panel-heading"><span id="schedule_task_usrname" style="color: red;"></span> 考勤计划</div>
+				<div class="list-group">
+                    {% for row in data['schedule_task'] %}
+					<div class="list-group-item"><input type="radio" id="st_{{row[0]}}" name="st" value="{{row[0]}}" onclick="schedule_task_assign(this);"/> {{row[1]}}</div>
+                    {% end %}
+				</div>
+			</div>
+        </div>
+    </div>
+</section>
+{% end %}

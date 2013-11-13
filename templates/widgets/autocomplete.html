@@ -1,0 +1,7 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+        autocomplete("{{id}}","{{key}}","{% raw item_tpl %}","{{at}}");
+    });
+</script>
+<input type="text" class="form-control" id="{{ id }}_text" name="{{ id }}_text" placeholder="{{placeholder}}"/>
+<input type="hidden" id="{{ id }}" name="{{ id }}"/>

@@ -1,0 +1,35 @@
+<div class="row">
+    <div class="col-lg-6">
+        <section class="panel">
+            <header class="panel-heading bg bg-primary">
+              <a class="btn btn-link pull-right nav"></a>
+              基本
+            </header>
+            <ul class="list-group">
+              <li class="list-group-item">
+                <div class="media">
+                  人员编码前缀: <input name="s_usr_code_prefix" id="s_usr_code_prefix" type="text" value="P"/>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="media">
+                  人员编码初始长度: <input name="s_usr_code_fmt_length" id="s_usr_code_fmt_length" type="number" value="5"/>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="media">
+                  是否开放匿名注册: <select id="s_usr_register_open" name="s_usr_register_open">
+                    <option value="N">否</option>
+                    <option value="Y">是</option>
+                  </select>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="media">
+                  创建用户的默认角色名: {% module RoleComboBox(id="s_usr_register_default_role_name") %}
+                </div>
+              </li>
+            </ul>
+          </section>
+    </div>
+</div>

@@ -1,0 +1,60 @@
+{% extends "master.html" %}
+{% block title %}系统分类{% end %}
+{% block header %}
+{% end %}
+{% block workspace %}
+    <section class="main padder">
+        <div class="clearfix">
+            <h4><i class="icon-tags"></i>系统分类</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel">
+                    <div class="panel-heading">分类编辑</div>
+                    <div class="panel-body">
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="SexTreeView",taxonomy="Sex",placeholder="性别") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="PostTreeView",taxonomy="Post",placeholder="职位") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="EducationalBackgroundTreeView",taxonomy="EducationalBackground",placeholder="学历") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="PoliticalLandscapeTreeView",taxonomy="PoliticalLandscape",placeholder="政治面貌") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="NationTreeView",taxonomy="Nation",placeholder="民族") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="MaritalStatusTreeView",taxonomy="MaritalStatus",placeholder="婚姻状况") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="HealthStatusTreeView",taxonomy="HealthStatus",placeholder="健康状况") %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="thumbnail" style="border: 0px;">
+                                {% module TermTaxonomyEditor(id="EmploymentPathwaysTreeView",taxonomy="EmploymentPathways",placeholder="录用途径") %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% end %}

@@ -1,0 +1,123 @@
+{% extends "../workbench/master.html" %}
+{% block title %}任务计划{% end %}
+{% block header %}
+<script type="text/javascript" src="/ajax/tinyms.ValidWorkScheduleTask.TimeBlock.js"></script>
+<script type="text/javascript">
+	var current_selected_workschedule_id = 0;
+    function ViewValidWorkScheduleTaskTimeBlocks(elem,v){
+		var row = ValidWorkScheduleTaskDataTable_.GetRow(v);
+		$("#current_task_name").html("<font color='red'>"+row.name+" </font>");
+		current_selected_workschedule_id = v;
+        {% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.view'}) %}
+		$("#timeblocks_panel :checkbox").each(function (i, elem) {
+            $(elem).prop("checked", false)
+        });
+		validwork.controller.ValidWorkScheduleTask4TimeBlock.list({id:v},function(b,data){
+			if(b){
+				$("#timeblocks_panel :checkbox").each(function(i,elm){
+                    $(elm).prop("checked",false);
+                });
+                $("#timeblocks_panel :checkbox").each(function(i,elm){
+                    var v = parseInt($(this).val())
+                    if($.inArray(v,data)!=-1){
+                        $(elm).prop("checked",true);
+                    }
+                });
+			}
+		});
+        {% end %}
+    }
+	function SaveValidWorkScheduleTaskTimeBlocks(elem,v){
+		if(current_selected_workschedule_id==0){
+			return;
+		}
+		{% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+		var state = "0";
+		if($(elem).prop("checked")){
+			state = "1";
+		}
+		validwork.controller.ValidWorkScheduleTask4TimeBlock.save({id:current_selected_workschedule_id,tb_id:v,s:state},function(b,data){
+			if(b){
+				var msg = data[0];
+				if (msg == "success") {
+					toastr.success("保存成功!")
+				} else {
+					toastr.error("保存失败!")
+				}
+			}
+		});
+		{% end %}
+	}
+    function datatable_render_actionbar(id,k,v,row){
+        var action_btns = "";
+		{% if auth({'tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit'}) %}
+        if(id=="ValidWorkScheduleTaskDataTable"){
+            return action_btns += '<a class="btn-link" title="查看班次/时间段" onclick="ViewValidWorkScheduleTaskTimeBlocks(this,' + v + ');"><i class="icon-time"></i></a>';
+        }
+		{% end %}
+        return action_btns;
+    }
+	$(document).ready(function(){
+		$("#current_task_name").html("可用");
+	});
+</script>
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-book"></i>任务计划</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="panel">
+                <div class="panel-heading">任务计划列表</div>
+                <div class="panel-body">
+                    {% module DataTable(id="ValidWorkScheduleTaskDataTable",
+                    entity="validwork.entity.ValidWorkScheduleTask",
+                    cols=['name','usage_description'],
+                    titles=['名称','用途/描述'],
+                    autoform=False,
+                    search_fields = ["name","usage_description"],
+                    search_tip = "可搜索名称,用途/描述",
+                    point_list = "tinyms.validwork.entity.ValidWorkScheduleTask.list",
+                    point_view = "tinyms.validwork.entity.ValidWorkScheduleTask.view",
+                    point_add = "tinyms.validwork.entity.ValidWorkScheduleTask.add",
+                    point_update = "tinyms.validwork.entity.ValidWorkScheduleTask.update",
+                    point_delete = "tinyms.validwork.entity.ValidWorkScheduleTask.delete"
+                    ) %}
+                    {% module panel_start("ValidWorkScheduleTaskDataTable") %}
+                    {% module datagrid_form_start("ValidWorkScheduleTaskDataTable") %}
+                    <div class="form-group">
+                    <label for="name" class="col-lg-3 control-label">名称</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control " id="name" name="name" maxlength="60" required>
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="usage_description" class="col-lg-3 control-label">用途/描述</label>
+                    <div class="col-lg-8">
+                    <textarea class="form-control " id="usage_description" name="usage_description"></textarea>
+                    </div>
+                    </div>
+                    {% module datagrid_form_end("ValidWorkScheduleTaskDataTable","validwork.entity.ValidWorkScheduleTask") %}
+                    {% module panel_end() %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel">
+                <div class="panel-heading"><span id="current_task_name"></span>的班次/时间段</div>
+                <div class="list-group" id="timeblocks_panel">
+                    {% for row in data["timeblocks"] %}
+                    <div class="list-group-item">
+                        <input type="checkbox" id="timeblocks_{{row[0]}}" name="timeblocks_{{row[0]}}" onclick="SaveValidWorkScheduleTaskTimeBlocks(this,{{row[0]}});" value="{{row[0]}}"/> {{row[1]}}
+                        <i>({{row[2]}}-{{row[3]}})</i>
+                    </div>
+                    {% end %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% end %}

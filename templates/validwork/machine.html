@@ -1,0 +1,42 @@
+{% extends "../workbench/master.html" %}
+{% block title %}考勤机{% end %}
+{% block header %}
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-book"></i>考勤机</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel">
+                <div class="panel-heading">考勤机列表</div>
+                <div class="panel-body">
+                    {% module DataTable(id="ValidWorkMachineDataTable",
+                                        entity="validwork.entity.ValidWorkMachine",
+                                        cols=['ip','flag','last_connect_time'],
+                                        titles=['IP','描述','最后连接时间'],
+                                        autoform=False,
+                                        search_fields = ["ip","flag"],
+                                        search_tip = "可搜索IP、描述",
+                                        point_list = "tinyms.validwork.entity.ValidWorkMachine.list",
+                                        point_update = "tinyms.validwork.entity.ValidWorkMachine.update"
+                                        ) %}
+                    {% module panel_start("ValidWorkMachineDataTable") %}
+                    {% module datagrid_form_start("ValidWorkMachineDataTable") %}
+
+                    <div class="form-group">
+                    <label for="flag" class="col-lg-3 control-label">描述</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control" id="flag" name="flag"  >
+                    </div>
+                    </div>
+
+                    {% module datagrid_form_end("ValidWorkMachineDataTable","validwork.entity.ValidWorkMachine") %}
+                    {% module panel_end() %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% end %}

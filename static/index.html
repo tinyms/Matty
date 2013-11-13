@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="jslib/json2.js" type="text/javascript"></script>
+    <script src="jslib/jquery-1.10.2.min.js" type="text/javascript"></script>
+    <script src="jslib/bootstrap3/js/bootstrap.min.js"></script>
+    <script src="jslib/json-table.js"></script>
+    <script src="jslib/mustache.js"></script>
+    <script src="jslib/jquery.number.min.js"></script>
+    <script src="jslib/chart.min.js"></script>
+    <!--<script src="/ajax/welcome.MatchHistoryQuery.js" type="text/javascript"></script>-->
+    <script src="/ajax/single_order.js" type="text/javascript"></script>
+    <script src="jslib/lottery.js"></script>
+    <link href="jslib/bootstrap3/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="jslib/bootstrap3/css/bootstrap-theme.css" rel="stylesheet" media="screen">
+    <style type="text/css">
+        body {
+            margin: 0;
+            font-family: '微软雅黑', Verdana, sans-serif, '宋体';
+            font-size: 13px;
+            line-height: 18px;
+            color: #000000;
+            background-color: #ffffff;
+        }
+
+        #match_grid_panel {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="page-header"></div>
+<div class="container">
+<div class="row">
+    <div class="col-lg-3"></div>
+    <div class="col-lg-6">
+        <div class="input-group">
+                <span class="input-group-addon">
+                    <input type="checkbox" id="match_parse_action"/> 变赔
+                  </span>
+            <input type="text" class="form-control" id="season_url_edit">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="match_analyze_btn">Go!</button>
+                      </span>
+        </div>
+        <!-- /input-group -->
+    </div>
+    <div class="col-lg-3">
+        <button type="button" class="btn btn-success" id="bt_history_query_ui">历史</button>
+        <button type="button" class="btn btn-info" id="bt_single_order">组合</button>
+    </div>
+</div>
+<!-- /.row -->
+<div class="row" id="match_grid_panel">
+    <div class="col-lg-1"></div>
+    <div class="col-lg-10">
+        <div class="panel">
+            <div class="panel-heading">比赛场次<img id="loading" src="images/loading.gif"
+                                                style="border: 0px;width: 16px; display: none;"/></div>
+            <table class="table table-hover table-condensed" id="matchs_table">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-1"></div>
+</div>
+<!--单注排列组合-->
+<div class="modal" id="SingleOrderDlg">
+    <div class="modal-dialog" style="width: 960px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">单注组合</h4>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="SingleOrderTab">
+                    <li class="active"><a href="#SingleOrderTab_home" data-toggle="tab">投注</a></li>
+                    <li><a href="#SingleOrderTab_profile" data-toggle="tab">分布</a></li>
+                    <li><a href="#SingleOrderTab_messages" data-toggle="tab">结果</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="SingleOrderTab_home">
+                        <form class="form-inline" style="margin-top: 10px;">
+                        <input id="single_order_pub_num" type="text" value="10" class="form-control" style="width: 50px;"/>注,
+                        容错<input id="single_order_pub_err" type="text" value="4" class="form-control" style="width: 50px;"/>场.
+                            </form>
+                        <textarea class="form-control" rows="20" cols="120" style="margin-top: 10px;" id="lottery_select"></textarea>
+                    </div>
+                    <div class="tab-pane" id="SingleOrderTab_profile">
+                        <div style="margin-top: 10px;">
+                            <ol class="breadcrumb" id="results_balance_display"></ol>
+                        </div>
+                        <div style="margin-top: 5px; background-color: #f5f5f5;" id="result_layouts">
+
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="SingleOrderTab_messages">
+                        <textarea id="after_order_result" class="form-control" rows="20" cols="120" style="margin-top: 10px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="SingleOrderActionButton">重排</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal" id="DataParseDlg">
+    <div class="modal-dialog" style="width: 960px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title">分析 - <span class="team_names_title"></span></h5>
+            </div>
+            <div class="modal-body" id="base_face_details">
+                <ul class="nav nav-tabs">
+                    <li><a href="#base_tab" data-toggle="tab">基本面概览</a></li>
+                    <li><a href="#base_face_tab" data-toggle="tab">基本面分析</a></li>
+                    <li><a href="#base_face_daxiao_tab" data-toggle="tab">大小</a></li>
+                    <li><a href="#base_face_bifen_tab" data-toggle="tab">波胆</a></li>
+                    <li><a href="#change_tab" data-toggle="tab">变赔</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="base_tab"></div>
+                    <div class="tab-pane" id="base_face_tab">
+                        <iframe id="baseface_url_iframe" width="100%" height="650" style="border: 0px;"></iframe>
+                    </div>
+                    <div class="tab-pane" id="base_face_daxiao_tab">
+                        <iframe id="base_face_daxiao_tab_iframe" width="100%" height="650" style="border: 0px;"></iframe>
+                    </div>
+                    <div class="tab-pane" id="base_face_bifen_tab">
+                        <iframe id="base_face_bifen_tab_iframe" width="100%" height="650" style="border: 0px;"></iframe>
+                    </div>
+                    <div class="tab-pane" id="change_tab">
+                        <iframe id="extern_url_iframe" width="100%" height="650" style="border: 0px;"></iframe>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal" id="history_dlg">
+    <div class="modal-dialog" style="width: 960px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">历史比赛参考</h4>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <!--同赔-->
+                    <form class="form-inline">
+                        实力:<select id="ref_odds_force" class="form-control" style="width: 70px;">
+                        <option value="3" selected>3</option>
+                        <option value="1">1</option>
+                        <option value="0">0</option>
+                        <option value="31">31</option>
+                        <option value="10">10</option>
+                    </select>
+                        赛果:<select id="ref_win_direct" class="form-control" style="width: 85px;">
+                        <option value="3" selected>主胜</option>
+                        <option value="0">客胜</option>
+                        <option value="1">平手</option>
+                    </select>
+                        公司:<select id="ref_odds_companys" class="form-control" style="width: 85px;">
+                        <option value="wl" selected>威廉</option>
+                        <option value="lb">立博</option>
+                        <option value="ysb">易博</option>
+                        <option value="beta">贝塔</option>
+                        <option value="am">澳门</option>
+                    </select>
+                        胜赔:<input id="ref_odds_win" value="1.5" type="text" class="form-control"
+                                  style="width: 100px"/>
+                        平尾:<input id="ref_odds_draw_ext" class="form-control" placeholder="平赔尾数"
+                                  style="width: 100px"/>
+                        <button type="button" class="btn btn-default" id="btn_history_relation_query">查询
+                        </button>
+                    </form>
+                </div>
+                <div style="margin-top: 5px;">
+                    <ul class="nav nav-tabs">
+                        <li><a href="#query_result_win_tab" data-toggle="tab">胜<span id="badge_win"
+                                                                                     class="badge pull-right">0</span></a>
+                        </li>
+                        <li><a href="#query_result_draw_tab" data-toggle="tab">平<span id="badge_draw"
+                                                                                      class="badge pull-right">0</span></a>
+                        </li>
+                        <li><a href="#query_result_lost_tab" data-toggle="tab">负<span id="badge_lost"
+                                                                                      class="badge pull-right">0</span></a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="query_result_win_tab">
+                            <table class="table table-hover table-condensed" id="query_result_win_table">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="query_result_draw_tab">
+                            <table class="table table-hover table-condensed" id="query_result_draw_table">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="query_result_lost_tab">
+                            <table class="table table-hover table-condensed" id="query_result_lost_table">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+</div>
+<script id="match_details_tpl" type="text/x-jsrender">
+    <table class="table table-hover table-condensed">
+        <tr>
+            <td>综合10场: {{mix_10}}</td>
+        </tr>
+        <tr>
+            <td>主客10场: {{last_10}}</td>
+        </tr>
+        <tr>
+            <td>主客06场: {{last_6}}</td>
+        </tr>
+        <tr>
+            <td>主客04场: {{last_4}}</td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="team_force_chart"></canvas>
+                <div style="margin-top:3px;text-indent:20px;color:#CCCCCC;">蓝色主队,黄色客队</div>
+            </td>
+        </tr>
+        <tr>
+            <td>球差: {{ball_diff}} 预测: {{detect_result}} 主客战绩: {{{last_battle}}} 混合战绩: {{{last_mix_battle}}}</td>
+        </tr>
+    </table>
+    <table class="table table-hover table-condensed" style="width:570px;">
+        <tr>
+            <th scope="col">公司</th>
+            <th scope="col">初赔</th>
+            <th scope="col">变赔</th>
+            <th scope="col">差异</th>
+        </tr>
+        {{#odds}}
+        <tr>
+            <td>{{{com_name}}}</td>
+            <td>{{{start}}}</td>
+            <td>{{{end}}}</td>
+            <td>{{{change}}}</td>
+        </tr>
+        {{/odds}}
+    </table>
+</script>
+<script id="match_history_tpl" type="text/x-jsrender">
+    <table class="table table-hover table-condensed">
+        <tr>
+            <td>综合10场: {{mix_10}}</td>
+        </tr>
+        <tr>
+            <td>主客10场: {{last_10}}</td>
+        </tr>
+        <tr>
+            <td>主客06场: {{last_6}}</td>
+        </tr>
+        <tr>
+            <td>主客04场: {{last_4}}</td>
+        </tr>
+        <tr>
+            <td>球差: {{ball_diff}} 预测: {{detect_result}} 主客战绩: {{last_battle}}</td>
+        </tr>
+    </table>
+    <table class="table table-hover table-condensed" style="width:470px;">
+        <tr>
+            <th scope="col">公司</th>
+            <th scope="col">初赔</th>
+            <th scope="col">变赔</th>
+            <th scope="col">差异</th>
+        </tr>
+        {{#odds}}
+        <tr>
+            <td>{{{com_name}}}</td>
+            <td>{{{start}}}</td>
+            <td>{{{end}}}</td>
+            <td>{{{change}}}</td>
+        </tr>
+        {{/odds}}
+    </table>
+</script>
+</body>
+</html>

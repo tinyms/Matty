@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% end %} - ArchiveX Workbench</title>
+    <meta name="description" content="ArchiveX web framwork">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script type="text/javascript" src="{{ static_url('jslib/tinyms.common.js') }}"></script>
+    <script type="text/javascript" src="{{ static_url('jslib/tip/toastr.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/plugin.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/landing.css') }}">
+    <link rel="stylesheet" href="{{ static_url('jslib/tip/toastr.min.css') }}">
+    <!--[if lt IE 9]>
+    <script src="{{ static_url('theme/v.3.2.1/js/ie/respond.min.js') }}"></script>
+    <script src="{{ static_url('theme/v.3.2.1/js/ie/html5.js') }}"></script>
+    <script src="{{ static_url('theme/v.3.2.1/js/ie/excanvas.js') }}"></script>
+    <![endif]-->
+    {% block header %}{% end %}
+    <style>
+        body {
+            font-family: '微软雅黑', Verdana, sans-serif, '宋体';
+        }
+    </style>
+</head>
+<body>
+<!-- header -->
+<header id="header" class="navbar bg bg-black">
+    <ul class="nav navbar-nav navbar-avatar pull-right">
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                <span class="hidden-xs-only">{% module CurrentAccountName() %}</span>
+                <span class="thumb-small avatar inline"><img src="{{ static_url('theme/v.3.2.1/images/avatar.jpg') }}" alt="Mika Sokeil"
+                                                             class="img-circle"></span>
+                <b class="caret hidden-xs-only"></b>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a href="/workbench/setting">设置</a></li>
+                <li><a href="#">个人资料</a></li>
+                <li class="divider"></li>
+                <li><a href="/logout">退出</a></li>
+            </ul>
+        </li>
+    </ul>
+    <a class="navbar-brand" href="#">ArchX</a>
+    <button type="button" class="btn btn-link pull-left nav-toggle visible-xs"
+            data-toggle="class:slide-nav slide-nav-left" data-target="body">
+        <i class="icon-reorder icon-xlarge text-default"></i>
+    </button>
+    <form class="navbar-form pull-left shift" action="" data-toggle="shift:appendTo" data-target=".nav-primary">
+        <i class="icon-search text-muted"></i>
+        <input type="text" class="input-sm form-control" placeholder="搜索">
+    </form>
+</header>
+<!-- / header -->
+{% module SideBar() %}
+<section id="content">
+<section class="main padder">
+{% block workspace %}{% end %}
+</section>
+</section>
+<!-- footer -->
+<footer id="footer">
+    <div class="text-center padder clearfix">
+        <p>
+            <small>{% module Version() %}</small>
+        </p>
+    </div>
+</footer>
+<a href="#" class="hide slide-nav-block" data-toggle="class:slide-nav slide-nav-left" data-target="body"></a>
+<!-- / footer -->
+<!-- Bootstrap -->
+<script src="{{ static_url('theme/v.3.2.1/js/bootstrap.js') }}"></script>
+<!-- app -->
+<script src="{{ static_url('theme/v.3.2.1/js/app.js') }}"></script>
+<script src="{{ static_url('theme/v.3.2.1/js/app.plugin.js') }}"></script>
+<script src="{{ static_url('theme/v.3.2.1/js/app.data.js') }}"></script>
+{% block footer %}{% end %}
+</body>
+</html>

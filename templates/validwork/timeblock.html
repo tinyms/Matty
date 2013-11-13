@@ -1,0 +1,102 @@
+{% extends "../workbench/master.html" %}
+{% block title %}班次/时间段{% end %}
+{% block header %}
+<script type="text/javascript">
+function datatable_form_init(id){
+    if(id=="ValidWorkTimeBlockDataTable"){
+        $("#ValidWorkTimeBlockDataTable_form #start_time").val("00:00");
+        $("#ValidWorkTimeBlockDataTable_form #end_time").val("00:00");
+    }
+}
+</script>
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-book"></i>班次/时间段</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel">
+                <div class="panel-heading">班次/时间段列表</div>
+                <div class="panel-body">
+                    {% module DataTable(id="ValidWorkTimeBlockDataTable",
+                    entity="validwork.entity.ValidWorkTimeBlock",
+                    cols=['name','start_time','end_time','normal_in_space','normal_out_space','late_space','leave_early_space'],
+                    titles=['名称','开始时间','结束时间','上班区间','下班区间','迟到区间','早退区间'],
+                    autoform=True,
+                    search_fields = ["name"],
+                    search_tip = "可搜索班次/时间段名称",
+                    point_list = "tinyms.validwork.entity.ValidWorkTimeBlock.list",
+                    point_view = "tinyms.validwork.entity.ValidWorkTimeBlock.view",
+                    point_add = "tinyms.validwork.entity.ValidWorkTimeBlock.add",
+                    point_update = "tinyms.validwork.entity.ValidWorkTimeBlock.update",
+                    point_delete = "tinyms.validwork.entity.ValidWorkTimeBlock.delete"
+                    ) %}
+                    {% module panel_start("ValidWorkTimeBlockDataTable") %}
+                    {% module datagrid_form_start("ValidWorkTimeBlockDataTable") %}
+                    <div class="form-group">
+                    <label for="name" class="col-lg-3 control-label">名称</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control " id="name" name="name" maxlength="30" required>
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="start_time" class="col-lg-3 control-label">开始时间</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control " id="start_time" name="start_time" required placeholder="00:00">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="end_time" class="col-lg-3 control-label">结束时间</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control " id="end_time" name="end_time" required placeholder="00:00">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="normal_in_space" class="col-lg-3 control-label">上班区间(分钟)</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control digits spinner-input" id="normal_in_space" name="normal_in_space">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="normal_out_space" class="col-lg-3 control-label">下班区间(分钟)</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control digits spinner-input" id="normal_out_space" name="normal_out_space">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="late_space" class="col-lg-3 control-label ">迟到区间(分钟)</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control digits spinner-input" id="late_space" name="late_space">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="leave_early_space" class="col-lg-3 control-label">早退区间(分钟)</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control digits spinner-input" id="leave_early_space" name="leave_early_space">
+                    </div>
+                    </div>
+                    {% module datagrid_form_end("ValidWorkTimeBlockDataTable","validwork.entity.ValidWorkTimeBlock") %}
+                    {% module panel_end() %}
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-body">
+                    *时间24小时制，区间指登记的有效时间范围，区间单位为分钟，4种区间含义如下：
+                    <div style="margin-top: 5px;">1，上班区间: 上班时间前多少分钟为正常登记时间</div>
+                    <div style="margin-top: 5px;">2，下班区间: 下班时间后多少分钟为正常登记时间</div>
+                    <div style="margin-top: 5px;">3，迟到区间: 上班时间后多少分钟登记为迟到,否则视为旷工</div>
+                    <div style="margin-top: 5px;">4，早退区间: 下班时间前多少分钟视为早退,否则视为旷工</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% end %}

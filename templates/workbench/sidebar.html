@@ -1,0 +1,21 @@
+<!-- nav -->
+<nav id="nav" class="nav-primary hidden-xs nav-vertical bg-light">
+    <ul class="nav" data-spy="affix" data-offset-top="50">
+        <li class="active"><a href="/workbench/dashboard"><i class="icon-dashboard icon-xlarge"></i><span>控制面板</span></a>
+        </li>
+        {% raw context["menu"] %}
+        {% if context["archives_show"] %}
+        <li><a href="/workbench/archives"><i class="icon-book icon-xlarge"></i><span>人员档案</span></a></li>
+        {% end %}
+        {% if context["role_org_show"] %}
+        <li><a href="/workbench/security"><i class="icon-group icon-xlarge"></i><span>角色组织</span></a></li>
+        {% end %}
+        {% if auth({'tinyms.sidebar.sys_categories.show'}) %}
+        <li><a href="/workbench/categories"><i class="icon-tags icon-xlarge"></i><span>系统分类</span></a></li>
+        {% end %}
+        {% if context["sys_params_show"] %}
+        <li><a href="/workbench/setting"><i class="icon-gears icon-xlarge"></i><span>参数设置</span></a></li>
+        {% end %}
+    </ul>
+</nav>
+<!-- / nav -->

@@ -1,0 +1,111 @@
+{% if opt["allowd_register"] == "Y" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ArchiveX workbench</title>
+    <meta name="description" content="ArchiveX web framwork">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script type="text/javascript" src="{{ static_url('theme/v.3.2.1/js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static_url('jslib/tip/toastr.min.js') }}"></script>
+    <!-- Bootstrap -->
+    <script src="{{ static_url('theme/v.3.2.1/js/bootstrap.js') }}"></script>
+    <script type="text/javascript" src="{{ static_url('jslib/tinyms.common.js') }}"></script>
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ static_url('theme/v.3.2.1/css/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('jslib/tip/toastr.min.css') }}">
+    <!--[if lt IE 9]>
+    <script src="{{ static_url('theme/v.3.2.1/js/ie/respond.min.js') }}"></script>
+    <script src="{{ static_url('theme/v.3.2.1/js/ie/html5.js') }}"></script>
+    <![endif]-->
+    <style>
+        body {
+            font-family: '微软雅黑', Verdana, sans-serif, '宋体';
+        }
+    </style>
+    <script type="text/javascript">
+        var err_message = {
+            "AccountNameRequired":"账户名需要填写","EmailRequired":"邮箱需要填写","PwdRequired":"密码需要填写"
+            ,"AgreeRequired":"必须同意协议","PwdNotSame":"密码不一致","AccountExists":"帐号已经存在","EmailExists":"邮箱已经存在"
+        }
+        $(document).ready(function(){
+            $("#btn_reg").click(function(){
+                if(!$("#reg_form").valid()){
+                    return;
+                }
+                $("#reg_form").ajaxSubmit({
+                    "dataType": "json", "url": "/api/tinyms.controller.anonymous.reg/create", "type": "post",
+                    "success": function (msg, statusText, xhr, $form) {
+                        if(msg=="Success"){
+                            location.href = "/workbench/dashboard"
+                        }else{
+                            console.log(msg);
+                            toastr.error(err_message[msg]);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+  <!-- header -->
+  <header id="header" class="navbar bg bg-black">
+    <a href="#" class="btn btn-link pull-right m-t-mini"><i class="icon-question icon-xlarge text-default"></i></a>
+    <a class="navbar-brand" href="#">ArchX</a>
+  </header>
+  <!-- / header -->
+  <section id="content">
+    <div class="main padder">
+      <div class="row">
+        <div class="col-lg-4 col-lg-offset-4 m-t-large">
+          <section class="panel">
+            <header class="panel-heading text-center">
+              帐号注册
+            </header>
+            <form id="reg_form" class="panel-body">
+              <div class="block">
+                <label class="control-label">帐号</label>
+                <input type="text" class="form-control" id="account_name" name="account_name" minlength="6" required>
+              </div>
+              <div class="block">
+                <label class="control-label">邮箱</label>
+                <input type="email" placeholder="you@example.com" class="form-control" id="email" name="email" required>
+              </div>
+              <div class="block">
+                <label class="control-label">密码</label>
+                <input type="password" id="pwd" name="pwd" class="form-control" minlength="8" required>
+              </div>
+              <div class="block">
+                <label class="control-label">重复密码</label>
+                <input type="password" id="re_pwd" name="re_pwd" class="form-control" minlength="8" equalTo="#pwd">
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" value="1" id="agree" name="agree" required> 同意 <a href="#">协议</a>
+                </label>
+              </div>
+              <input type="button" id="btn_reg" class="btn btn-info" value="注 册"/>
+              <div class="line line-dashed"></div>
+              <p class="text-muted text-center"><small>已经有账号?</small></p>
+              <a href="/login" class="btn btn-white btn-block">登 录</a>
+            </form>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+<!-- footer -->
+<footer id="footer">
+    <div class="text-center padder clearfix">
+        <p>
+            <small>&copy; ArchiveX 2013</small>
+            <br>
+        </p>
+    </div>
+</footer>
+<!-- / footer -->
+</body>
+</html>
+{% end %}

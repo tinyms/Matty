@@ -1,0 +1,96 @@
+<script type="text/javascript">
+    <!--
+    var {{id}}_setting = {
+        view: {
+            dblClickExpand: false
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        callback: {
+            beforeClick: {{id}}_beforeClick,
+            onClick: {{id}}_onClick
+        }
+    };
+
+    function {{id}}_beforeClick(treeId, treeNode) {
+        var check = (treeNode && !treeNode.isParent);
+        if (!check) alert("只能选择子部门.");
+        return check;
+    }
+
+    function {{id}}_onClick(e, treeId, treeNode) {
+        var zTree = $.fn.zTree.getZTreeObj("{{ id }}_tree"),
+                nodes = zTree.getSelectedNodes(),
+                v = "",values="";
+        nodes.sort(function compare(a, b) {
+            return a.id - b.id;
+        });
+        for (var i = 0, l = nodes.length; i < l; i++) {
+            v += nodes[i].name + ",";
+            values += nodes[i].id + ",";
+        }
+        if (v.length > 0) v = v.substring(0, v.length - 1);
+        if (values.length > 0) values = values.substring(0, values.length - 1);
+        var name = $("#{{ id }}_category_name");
+        name.attr("value", v);
+        $("#{{ id }}").attr("value", values);
+        /**
+         * @plugin:
+         * tree_combobox_select_finished(id,val)
+         */
+        if(typeof(tree_combobox_select_completed)!="undefined"){
+            tree_combobox_select_completed("{{ id }}",values);
+        }
+    }
+
+    //供外部表单赋值调用，触发获取分类名称事件
+    function tree_combobox_value(id,val){
+        $("#"+id).val(val).trigger("change");
+        if(val.length>0){
+            var ids = val.split(",");
+            var zTree = $.fn.zTree.getZTreeObj(id+"_tree");
+            for(var k=0;k<ids.length;k++){
+                var node = zTree.getNodeByParam("id",new Number(ids[k]));
+                zTree.selectNode(node);
+            }
+        }
+    }
+
+    $(document).ready(function () {
+        tinyms.controller.org.OrgEdit.list({taxonomy:'{{opt["taxonomy"]}}'},function(b,data){
+		    $.fn.zTree.init($("#{{id}}_tree"), {{id}}_setting, data);
+            var zTree = $.fn.zTree.getZTreeObj("{{ id }}_tree");
+            zTree.expandAll(true);
+	    });
+        $("#{{id}}").bind("change",function(){
+            var v = $(this).val();
+            tinyms.controller.org.OrgEdit.names({taxonomy:'{{opt["taxonomy"]}}',idArray:v},function(b,data){
+                if(b){
+                    $("#{{ id }}_category_name").val(data);
+                }
+            });
+        });
+    });
+    -->
+</script>
+<ul class="nav navbar-nav hidden-xs">
+    <li>
+        <div id="{{ id }}-panel-tree">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              <input type="text" class="form-control" id="{{ id }}_category_name" placeholder="{{ph}}">
+              <input type="hidden" id="{{ id }}" name="{{ id }}"/>
+          </a>
+          <section class="dropdown-menu m-l-small m-t-mini">
+            <section class="panel panel-large arrow arrow-top">
+              <header class="panel-heading bg-white"></header>
+              <ul id="{{ id }}_tree" class="ztree"></ul>
+              <footer class="panel-footer text-small">
+              </footer>
+            </section>
+          </section>
+        </div>
+      </li>
+</ul>

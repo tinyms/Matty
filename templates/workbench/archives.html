@@ -1,0 +1,657 @@
+{% extends "master.html" %}
+{% block title %}档案管理{% end %}
+{% block header %}
+<script src="{{ static_url('jslib/datepicker/js/bootstrap-datepicker.js') }}"></script>
+<link rel="stylesheet" href="{{ static_url('jslib/datepicker/css/datepicker.css') }}">
+<script type="text/javascript">
+    {% module TermTaxonomyJavascript(name="OrgMap",taxonomy="Org") %}
+    {% module TermTaxonomyJavascript(name="PostMap",taxonomy="Post") %}
+    {% module TermTaxonomyJavascript(name="SexMap",taxonomy="Sex") %}
+    {% module TermTaxonomyJavascript(name="MaritalStatusMap",taxonomy="MaritalStatus") %}
+    {% module TermTaxonomyJavascript(name="EducationalBackgroundMap",taxonomy="EducationalBackground") %}
+
+    function datatable_server_params(id,aoData){
+        if(id=="ArchivesDataTable"){
+            aoData.push({name:"org_id",value:$("#OrgTreeComboBox").val()});
+        }else if(id=="WorkExperienceDataTable"){
+            aoData.push({name:"archives_id",value:$("#ArchivesDataTable_form").find("#id").val()});
+        }else if(id=="LearningExperienceDataTable"){
+            aoData.push({name:"archives_id",value:$("#ArchivesDataTable_form").find("#id").val()});
+        }else if(id=="TrainingExperienceDataTable"){
+            aoData.push({name:"archives_id",value:$("#ArchivesDataTable_form").find("#id").val()});
+        }
+    }
+    function datatable_render(id,k,v,row){
+        if(id=="ArchivesDataTable"){
+            if(k=="sex"){
+                return SexMap[v];
+            }else if(k=="post"){
+                return PostMap[v];
+            }else if(k=="marital_status"){
+                return MaritalStatusMap[v];
+            }else if(k=="educational_background"){
+                return EducationalBackgroundMap[v];
+            }else if(k=="org_id"){
+                return OrgMap[v];
+            }
+        }
+        return v;
+    }
+    function datatable_form_init(id){
+    }
+    function tree_combobox_select_completed(id,vals){
+        if(id=="OrgTreeComboBox"){
+            ArchivesDataTable_.Refresh();
+        }
+    }
+    function datatable_data_before_add(id){
+        $("#WorkExperienceDataTable_form").find("#archives_id").val($("#ArchivesDataTable_form").find("#id").val());
+        $("#LearningExperienceDataTable_form").find("#archives_id").val($("#ArchivesDataTable_form").find("#id").val());
+        $("#TrainingExperienceDataTable_form").find("#archives_id").val($("#ArchivesDataTable_form").find("#id").val());
+        if(id=="WorkExperienceDataTable"&&$("#WorkExperienceDataTable_form").find("#archives_id").val()==""){
+            toastr.error("需要先保存基本资料!")
+            return false;
+        }else if(id=="LearningExperienceDataTable"&&$("#LearningExperienceDataTable_form").find("#archives_id").val()==""){
+            toastr.error("需要先保存基本资料!")
+            return false;
+        }else if(id=="TrainingExperienceDataTable"&&$("#TrainingExperienceDataTable_form").find("#archives_id").val()==""){
+            toastr.error("需要先保存基本资料!")
+            return false;
+        }
+        return true;
+    }
+
+    function datatable_form_fill(id,row){
+        if(id=="ArchivesDataTable"){
+            $("#code_tmp").val(row.code);
+            tree_combobox_value("org_id",row.org_id);
+            WorkExperienceDataTable_.Refresh();
+            LearningExperienceDataTable_.Refresh();
+            TrainingExperienceDataTable_.Refresh();
+        }
+    }
+
+    $(document).ready(function(){
+        $(".date").datepicker({format:"yyyy-mm-dd"});
+
+    });
+</script>
+{% end %}
+{% block workspace %}
+    <section class="main padder">
+        <div class="clearfix">
+            <h4><i class="icon-book"></i>人员档案管理</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                {% module TreeComboBox(id="OrgTreeComboBox",taxonomy="Org",point_list="tinyms.view.orgtree.list",placeholder="选择(组织/部门)") %}
+            </div>
+        </div>
+        <div class="row" style="margin-top: 15px;">
+            <div class="col-lg-12">
+                <div class="panel">
+                    <div class="panel-heading">人员列表</div>
+                    <div class="panel-body">
+                        {% module DataTable(id="ArchivesDataTable",
+						entity="tinyms.core.entity.Archives",
+						cols=['name','sex','post','marital_status','educational_background','id_card','mobile_phone','email','org_id'],
+						titles=['名称','性别','职位','婚姻','学历','身份证','手机','邮箱','所属'],
+                        search_fields=['name','email','mobile_phone','current_address','id_card'],
+                        search_tip="可搜索姓名、邮箱、手机号码、当前住址、身份证号码",
+						autoform=False,
+                        checkable = True,
+						point_list = "tinyms.entity.archives.list",
+                        point_view = "tinyms.entity.archives.view",
+						point_add = "tinyms.entity.archives.add",
+						point_update = "tinyms.entity.archives.update",
+						point_delete = "tinyms.entity.archives.delete"
+						) %}
+                        {% module panel_start("ArchivesDataTable") %}
+                        <input type="button" class="btn btn-white btn-sm " id="ArchivesDataTable_form_return" onclick="ArchivesDataTable_.form.cancel(this);" value="返回"/>
+                        <ul class="nav nav-tabs" style="margin-top:12px;">
+                          <li class="active"><a href="#Archives_Base" data-toggle="tab">基本资料</a></li>
+                          <li><a href="#Archives_WorkExperience" data-toggle="tab">工作经历</a></li>
+                          <li><a href="#Archives_LearningExperience" data-toggle="tab">学习经历</a></li>
+                          <li><a href="#Archives_TrainingExperience" data-toggle="tab">培训经历</a></li>
+                        </ul>
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="Archives_Base">
+                                {% module form_start("ArchivesDataTable") %}
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="household_register" class="col-lg-1 control-label">编码</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="code_tmp" name="code_tmp" style="width: 120px;" readonly="true">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="org_id_category_name" class="col-lg-3 control-label">所属部门</label>
+                                        <div class="col-lg-8">
+                                            {% module TreeComboBox(id="org_id",taxonomy="Org",point_list="tinyms.view.orgtree.list",placeholder="选择(组织/部门)") %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="join_date" class="col-lg-3 control-label">入职时间</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control date" id="join_date" name="join_date"  placeholder="日期格式:1900-01-01">
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="leave_date" class="col-lg-3 control-label">离职时间</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control date" id="leave_date" name="leave_date"  placeholder="日期格式:1900-01-01">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="name" class="col-lg-3 control-label">姓名</label>
+                                        <div class="col-lg-8">
+                                            <input type="text" class="form-control" id="name" name="name" style="width: 120px;" required >
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="sex" class="col-lg-3 control-label">性别</label>
+                                        <div class="col-lg-8">
+                                        {% module TermTaxonomyComboBox(id="sex",taxonomy="Sex") %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="birthday" class="col-lg-3 control-label">出生日期</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control date" id="birthday" name="birthday" placeholder="日期格式:1900-01-01">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="alias" class="col-lg-3 control-label">别名</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="alias" name="alias"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="weight" class="col-lg-3 control-label">体重</label>
+                                        <div class="col-lg-8">
+                                        <input type="number" class="form-control" id="weight" name="weight" placeholder="公斤">
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="height" class="col-lg-3 control-label">身高</label>
+                                        <div class="col-lg-8">
+                                        <input type="number" class="form-control" id="height" name="height" placeholder="厘米">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="nation" class="col-lg-3 control-label">民族</label>
+                                        <div class="col-lg-8">
+                                        {% module TermTaxonomyComboBox(id="nation",taxonomy="Nation") %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="hometown" class="col-lg-3 control-label">籍贯</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="hometown" name="hometown"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="vision" class="col-lg-3 control-label">视力</label>
+                                        <div class="col-lg-8">
+                                        <input type="number" class="form-control" id="vision" name="vision">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="post" class="col-lg-3 control-label">职位</label>
+                                        <div class="col-lg-8">
+                                        {%
+                                            module TermTaxonomyComboBox(id="post",taxonomy="Post")
+                                        %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="health_state" class="col-lg-3 control-label">健康状况</label>
+                                        <div class="col-lg-8">
+                                        {%
+                                            module TermTaxonomyComboBox(id="health_state",taxonomy="HealthStatus")
+                                        %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="marital_status" class="col-lg-3 control-label">婚姻状况</label>
+                                        <div class="col-lg-8">
+                                        {%
+                                            module TermTaxonomyComboBox(id="marital_status",taxonomy="MaritalStatus")
+                                        %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="id_card" class="col-lg-1 control-label">身份证</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="id_card" name="id_card"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="household_register" class="col-lg-1 control-label">户籍地</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="household_register" name="household_register"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="educational_background" class="col-lg-3 control-label">学历</label>
+                                        <div class="col-lg-8">
+                                        {%
+                                            module TermTaxonomyComboBox(id="educational_background",taxonomy="EducationalBackground")
+                                        %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="specialty" class="col-lg-3 control-label">专业</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="specialty" name="specialty"  digits>
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="last_leave_school" class="col-lg-3 control-label">毕业院校</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="last_leave_school" name="last_leave_school"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                        <label for="political_landscape" class="col-lg-3 control-label">政治面貌</label>
+                                        <div class="col-lg-8">
+                                        {%
+                                            module TermTaxonomyComboBox(id="political_landscape",taxonomy="PoliticalLandscape")
+                                        %}
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                        <label for="profession_level" class="col-lg-3 control-label">职称等级</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="profession_level" name="profession_level"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="hobby" class="col-lg-1 control-label">爱好</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="hobby" name="hobby"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="disposition" class="col-lg-1 control-label">兴趣</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="disposition" name="disposition"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="strong_point" class="col-lg-1 control-label">特长</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="strong_point" name="strong_point"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="comple_skills" class="col-lg-1 control-label">技能</label>
+                                        <div class="col-lg-11">
+                                        <input type="text" class="form-control" id="comple_skills" name="comple_skills" placeholder="综合技能" >
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="current_address" class="col-lg-4 control-label">现住址</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="current_address" name="current_address"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="current_address_phone" class="col-lg-3 control-label">现电话</label>
+                                        <div class="col-lg-8">
+                                        <input type="text" class="form-control" id="current_address_phone" name="current_address_phone" placeholder="本人的固话、移动电话"  >
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                        <label for="email" class="col-lg-3 control-label">邮箱</label>
+                                        <div class="col-lg-8">
+                                        <input type="email" class="form-control" id="email" name="email">
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                            <label for="employment_pathways" class="col-lg-3 control-label">录用途径</label>
+                                            <div class="col-lg-8">
+                                            {%
+                                                module TermTaxonomyComboBox(id="employment_pathways",taxonomy="EmploymentPathways")
+                                            %}
+                                            </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                            <label for="employment_referrals" class="col-lg-3 control-label">介绍人</label>
+                                            <div class="col-lg-8">
+                                            <input type="text" class="form-control" id="employment_referrals" name="employment_referrals"  >
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                            <label for="emergency_contact" class="col-lg-3 control-label">紧急联系人</label>
+                                            <div class="col-lg-8">
+                                            <input type="text" class="form-control" id="emergency_contact" name="emergency_contact"  >
+                                            </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="form-group">
+                                            <label for="emergency_contact_phone" class="col-lg-3 control-label">紧急联系人电话</label>
+                                            <div class="col-lg-8">
+                                            <input type="text" class="form-control" id="emergency_contact_phone" name="emergency_contact_phone"  >
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="reward_punishment" class="col-lg-1 control-label">奖罚</label>
+                                        <div class="col-lg-11">
+                                            <textarea class="form-control" id="reward_punishment" name="reward_punishment"></textarea>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="self_evaluation" class="col-lg-1 control-label">自我评价</label>
+                                        <div class="col-lg-11">
+                                            <textarea class="form-control" id="self_evaluation" name="self_evaluation"></textarea>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="dream_job" class="col-lg-1 control-label">职业理想</label>
+                                        <div class="col-lg-11">
+                                            <textarea class="form-control" id="dream_job" name="dream_job"></textarea>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                        <label for="other_description" class="col-lg-1 control-label">其它说明</label>
+                                        <div class="col-lg-11">
+                                        <textarea class="form-control" id="other_description" name="other_description"></textarea>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        {% module datagrid_form_end("ArchivesDataTable","tinyms.core.entity.Archives") %}
+                                    </div>
+                                </div>
+                          </div>
+                          <div class="tab-pane" id="Archives_WorkExperience">
+                              {% module DataTable(id="WorkExperienceDataTable",
+                                entity="tinyms.core.entity.WorkExperience",
+                                cols=['start_date','end_date','work_unit','post'],
+                                titles=['开始日期','结束日期','工作单位及部门','职务'],
+                                search_fields=["work_unit","post"],
+                                search_tip="可搜索工作单位及部门、职务",
+                                autoform=False,
+                                point_list = "tinyms.entity.archives.list",
+                                point_view = "tinyms.entity.archives.view",
+                                point_add = "tinyms.entity.archives.add",
+                                point_update = "tinyms.entity.archives.update",
+                                point_delete = "tinyms.entity.archives.delete"
+                                ) %}
+                              {% module panel_start("WorkExperienceDataTable") %}
+                              {% module datagrid_form_start("WorkExperienceDataTable") %}
+
+                                <div class="form-group">
+                                <label for="start_date" class="col-lg-3 control-label">开始日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="start_date" name="start_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="end_date" class="col-lg-3 control-label">结束日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="end_date" name="end_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="work_unit" class="col-lg-3 control-label">工作单位</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="work_unit" name="work_unit"  >
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="post" class="col-lg-3 control-label">职位</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="post" name="post"  >
+                                    <input type="hidden" class="form-control" id="archives_id" name="archives_id">
+                                </div>
+                                </div>
+
+                              {% module datagrid_form_end("WorkExperienceDataTable","tinyms.core.entity.WorkExperience") %}
+                              {% module panel_end() %}
+                          </div>
+                          <div class="tab-pane" id="Archives_LearningExperience">
+                              {% module DataTable(id="LearningExperienceDataTable",
+                                entity="tinyms.core.entity.LearningExperience",
+                                cols=['start_date','end_date','school_name','specialized_field','finished'],
+                                titles=['开始日期','结束日期','学校名称','专业领域','毕(结、肆)业'],
+                                search_fields=["school_name","specialized_field","finished"],
+                                search_tip="可搜索学校名称、专业领域、毕(结、肆)业",
+                                autoform=False,
+                                point_list = "tinyms.entity.archives.list",
+                                point_view = "tinyms.entity.archives.view",
+                                point_add = "tinyms.entity.archives.add",
+                                point_update = "tinyms.entity.archives.update",
+                                point_delete = "tinyms.entity.archives.delete"
+                                ) %}
+                              {% module panel_start("LearningExperienceDataTable") %}
+                              {% module datagrid_form_start("LearningExperienceDataTable") %}
+
+                                <div class="form-group">
+                                <label for="start_date" class="col-lg-3 control-label">开始日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="start_date" name="start_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="end_date" class="col-lg-3 control-label">结束日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="end_date" name="end_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="school_name" class="col-lg-3 control-label">学校名称</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="school_name" name="school_name"  >
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="specialized_field" class="col-lg-3 control-label">专业领域</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="specialized_field" name="specialized_field"  >
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="finished" class="col-lg-3 control-label">毕(结、肆)业</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="finished" name="finished"  >
+                                    <input type="hidden" class="form-control" id="archives_id" name="archives_id"  />
+                                </div>
+                                </div>
+
+                              {% module datagrid_form_end("LearningExperienceDataTable","tinyms.core.entity.LearningExperience") %}
+                              {% module panel_end() %}
+                          </div>
+                          <div class="tab-pane" id="Archives_TrainingExperience">
+                              {% module DataTable(id="TrainingExperienceDataTable",
+                                entity="tinyms.core.entity.TrainingExperience",
+                                cols=['start_date','end_date','organization','certificate'],
+                                titles=['开始日期','结束日期','培训机构','证书'],
+                                search_fields=["organization","certificate"],
+                                search_tip="可搜索培训机构、证书",
+                                autoform=False,
+                                point_list = "tinyms.entity.archives.list",
+                                point_view = "tinyms.entity.archives.view",
+                                point_add = "tinyms.entity.archives.add",
+                                point_update = "tinyms.entity.archives.update",
+                                point_delete = "tinyms.entity.archives.delete"
+                                ) %}
+                              {% module panel_start("TrainingExperienceDataTable") %}
+                              {% module datagrid_form_start("TrainingExperienceDataTable") %}
+
+                                <div class="form-group">
+                                <label for="start_date" class="col-lg-3 control-label">开始日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="start_date" name="start_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="end_date" class="col-lg-3 control-label">结束日期</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control date" id="end_date" name="end_date" placeholder="日期格式:1900-01-01">
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="organization" class="col-lg-3 control-label">培训机构</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="organization" name="organization"  >
+                                </div>
+                                </div>
+
+                                <div class="form-group">
+                                <label for="certificate" class="col-lg-3 control-label">证书</label>
+                                <div class="col-lg-8">
+                                <input type="text" class="form-control" id="certificate" name="certificate"  >
+                                    <input type="hidden" class="form-control" id="archives_id" name="archives_id"/>
+                                </div>
+                                </div>
+
+                              {% module datagrid_form_end("TrainingExperienceDataTable","tinyms.core.entity.TrainingExperience") %}
+                              {% module panel_end() %}
+                          </div>
+                        </div>
+
+                        {% module panel_end() %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% end %}

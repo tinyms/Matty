@@ -1,0 +1,67 @@
+{% if auth({opt["point"].list}) %}
+<div id="{{opt['id']}}_wrap"  class="table-responsive">
+<table id="{{opt['id']}}" class="table table-condensed table-hover m-b-none">
+<tfoot><tr>{% raw opt['thTags'] %}</tr></tfoot>
+</table>
+</div>
+<script type="text/javascript">
+var {{opt["id"]}}_ = null;
+function {{opt["id"]}}_actionbar_render(col,v,type,row){
+    var action_btns = '<div style="width: 130px;">';
+    {% if auth({opt["point"].view}) %}
+	action_btns += '<a class="btn-link" title="查看" onclick="{{opt["id"]}}_.RecordSetProvider.Modify(this,' + v + ');"><i class="icon-list-alt"></i></a>';
+    {% end %}
+	if (typeof(datatable_render_actionbar) != "undefined") {
+		action_btns += datatable_render_actionbar('{{opt["id"]}}', "id", v, row);
+	}
+
+	{% if auth({opt["point"].add}) %}
+	action_btns += ' <a class="btn-link" title="添加" onclick="{{opt["id"]}}_.RecordSetProvider.New(this);"><i class="icon-plus"></i></a>';
+	{% end %}
+	{% if auth({opt["point"].update}) %}
+	action_btns += ' <a class="btn-link" title="修改" onclick="{{opt["id"]}}_.RecordSetProvider.Modify(this,' + v + ');"><i class="icon-pencil"></i></a>';
+	{% end %}
+	{% if auth({opt["point"].delete}) %}
+	action_btns += ' <a class="btn-link" title="删除" onclick="{{opt["id"]}}_.RecordSetProvider.Delete(this,' + v + ');"><i class="icon-remove"></i></a>';
+	{% end %}
+	return action_btns+"</div>";
+}
+$(document).ready(function () {
+    $("#{{opt['id']}}_panel").hide();
+    {% if auth({opt["point"].list}) %}
+        var {{opt["id"]}}_col_defs_tmp = {% raw opt["col_defs"] %};
+        var {{opt["id"]}}_col_defs = [];
+        {% if opt["checkable"] %}
+            {{opt["id"]}}_col_defs.push({"mData": "id", "bSortable":false, "sClass":"datatable_col_sel",
+            "sTitle": "<input type='checkbox' style='width: 13px; height: 13px;' onclick='{{opt["id"]}}_.CheckAll(this);'/>", "mRender": function (col, v, type, row) {
+                return "<input type='checkbox' style='width: 13px; height: 13px;' class='checkable' value='"+v+"' onclick='{{opt["id"]}}_.Selected(this);'/>";
+            }});
+        {% end %}
+        $.each({{opt["id"]}}_col_defs_tmp,function(i,v){
+            {{opt["id"]}}_col_defs.push(v);
+        });
+        {{opt["id"]}}_ = new DataTableX('{{opt["id"]}}','{{opt["entity_name_md5"]}}',{{opt["id"]}}_col_defs,{{opt["id"]}}_actionbar_render);
+        {{opt["id"]}}_.request_url = "/dataview/" + {{opt["id"]}}_.entityName + "/";
+        {{opt["id"]}}_.search_tip = "{{ opt['search_tip'] }}";
+        {% if not auth({opt["point"].add}) %}
+            {{opt["id"]}}_.is_add = false;
+        {% else %}
+            {{opt["id"]}}_.is_add = true;
+        {% end %}
+        {{opt["id"]}}_.Create();
+    {% end %}
+});
+</script>
+{% if opt["autoform"] %}
+<script id='{{ opt["id"] }}_EditFormTemplate' type="text/x-jsrender">
+	{% for item in opt["cols"] %}
+	<div class="form-group">
+		<label for="{{ item }}" class="col-lg-3 control-label">{{ item }}</label>
+		<div class="col-lg-8">
+		  <input type="text" class="form-control" id="{{ item }}" name="{{ item }}">
+		</div>
+	</div>
+	{% end %}
+</script>
+{% end %}
+{% end %}

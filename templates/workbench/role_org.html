@@ -1,0 +1,382 @@
+{% extends "master.html" %}
+{% block title %}用户、角色、组织{% end %}
+{% block header %}
+<script type="text/javascript" src="/ajax/RoleSecurityPointsAssign.js"></script>
+<script type="text/javascript" src="/ajax/AccountRoleEdit.js"></script>
+<script type="text/javascript">
+
+        function datatable_render_actionbar(id, col, val, row) {
+            if (id == "RoleDataTable") {
+                {% if auth({'tinyms.entity.role.points.view'}) %}
+                return ' <a class="btn-link" title="查看权限点" onclick="assign_security_points(this,' + val + ');"><i class="icon-key text-danger"></i></a>';
+                {% else %}
+                    return ""
+                {% end %}
+            }else if(id=="AccountDataTable"){
+                {% if auth({'tinyms.entity.account.role.edit'}) %}
+                return ' <a class="btn-link" title="查看用户角色" onclick="show_user_roles(this,' + val + ');"><i class="icon-key text-danger"></i></a>';
+                {% else %}
+                    return ""
+                {% end %}
+            }
+            return "";
+        }
+
+        function datatable_render(id,k,v,row){
+            if(id=="AccountDataTable"){
+                if(k=="enabled"){
+                    if(v==1){
+                        return "是";
+                    }
+                    return "否"
+                }
+            }
+            return v;
+        }
+
+        function datatable_form_fill(id,row){
+            if(id=="AccountDataTable"){
+                $("#archives_id_text").val(row.name);
+                $("#current_select_user_id").val(row.id);
+                $("#current_select_user_login_id").text(row.login_name);
+                show_user_roles(null,row.id);
+            }
+        }
+
+        function datatable_form_init(id){
+            if(id=="AccountDataTable"){
+                $("#"+id+"_form #archives_id").val("");
+            }
+        }
+
+        {% if auth({'tinyms.entity.role.points.view'}) %}
+        function assign_security_points(elem, role_id) {
+            var row = RoleDataTable_.GetRow(role_id);
+            $("#role_name_to_assign").text(row.name);
+            $("#RoleDataTable tr").removeAttr("style");
+            $(elem).parent().parent().attr("style", "background-color:#99CC99;");
+            $("#security_points_tab").data("RoleId", role_id);
+            tinyms.controller.security.RoleSecurityPointsEdit.list({id: role_id}, function (b, data) {
+                $("#security_points_edit_panel :checkbox").each(function (i, elem) {
+                    $(elem).prop("checked", false)
+                });
+                $.each(data, function (i, v) {
+                    $("#security_point_" + v).prop("checked", true);
+                });
+            });
+        }
+        {% end %}
+
+        function show_user_roles(elem,account_id){
+            $("#current_select_user_id").val(account_id);
+            var current_row = AccountDataTable_.GetRow(account_id);
+            $("#current_select_user_name").html(current_row.name);
+            {% if auth({"tinyms.entity.account.role.view"}) %}
+            tinyms.controller.security.AccountRoleEdit.list({id:account_id},function(b,data){
+                if(b){
+                    $("#account_role_edit_panel :checkbox").each(function(i,elm){
+                        $(elm).prop("checked",false);
+                    });
+                    $("#account_role_edit_panel :checkbox").each(function(i,elm){
+                        var v = parseInt($(this).val())
+                        if($.inArray(v,data)!=-1){
+                            $(elm).prop("checked",true);
+                        }
+                    });
+                }
+            });
+            {% end %}
+        }
+
+        function account_role_save(elem){
+            var account_id = $("#current_select_user_id").val();
+            if(account_id==null|| $.trim(account_id)==""){
+                toastr.error("请先选择一个帐号!")
+                return;
+            }
+            var state = 0;
+            if(!$(elem).prop("checked")){
+                state = 1;
+            }
+            {% if auth({"tinyms.entity.account.role.edit"}) %}
+                tinyms.controller.security.AccountRoleEdit.save({id:account_id,role_id:$(elem).val(),state:state},function(b,msg){
+                    if (msg == "success") {
+                        toastr.success("保存成功!")
+                    } else {
+                        toastr.error("保存失败!")
+                    }
+                });
+            {% end %}
+        }
+
+        function check_or_uncheck(link, mode) {
+            if ($(link).data("state") == undefined) {
+                $(link).data("state", true);
+            } else {
+                if (!$(link).data("state")) {
+                    $(link).data("state", true);
+                } else {
+                    $(link).data("state", false);
+                }
+            }
+            var cks = undefined;
+            if (mode == "sub") {
+                cks = $(link).parent().parent().find(":checkbox");
+            } else if (mode == "all") {
+                cks = $(link).parent().parent().parent().find(":checkbox");
+            }
+            if (cks != undefined) {
+                $.each(cks, function (k, elem) {
+                    if ($(link).data("state")) {
+                        $(elem).prop("checked", true);
+                    } else {
+                        $(elem).prop("checked", false);
+                    }
+                });
+            }
+        }
+
+        {% if auth({'tinyms.entity.role.points.update'}) %}
+            function security_points_save(link) {
+                var cks = $(link).parent().parent().parent().find(":checkbox");
+                var items = [];
+                $.each(cks, function (k, elem) {
+                    if ($(elem).prop("checked")) {
+                        items.push($(elem).val());
+                    }
+                });
+                var params = {"id": $("#security_points_tab").data("RoleId"), "points": JSON.stringify(items)};
+                tinyms.controller.security.RoleSecurityPointsEdit.save(params, function (b, data) {
+                    var msg = data[0];
+                    if (msg == "success") {
+                        toastr.success("保存成功!")
+                    } else {
+                        toastr.error("保存失败!")
+                    }
+                });
+            }
+
+            {% end %}
+            $(document).ready(function () {
+                $('#role_org_tab a:first').tab('show');
+                $('#security_points_tab a:first').tab('show');
+            });
+</script>
+{% end %}
+{% block workspace %}
+<div class="clearfix">
+    <h4><i class="icon-magic"></i>角色/组织</h4>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        <!-- right tab -->
+        <section class="panel">
+            <header class="panel-heading">
+                <ul class="nav nav-tabs pull-left" id="role_org_tab">
+                    {% if auth({'tinyms.entity.account.list'}) %}
+                    <li class="active"><a href="#account_panel" data-toggle="tab"><i class="icon-lock icon-large text-default"></i>账户</a></li>
+                    {% end %}
+                    {% if auth({'tinyms.entity.role.list'}) %}
+                    <li><a href="#role_panel" data-toggle="tab"><i
+                            class="icon-user icon-large text-default"></i>角色</a>
+                    </li>
+                    {% end %}
+                    <li><a href="#org_post_panel" data-toggle="tab"><i class="icon-sitemap icon-large text-default"></i>组织/部门</a></li>
+                </ul>
+            </header>
+            <div class="panel-body">
+                <div class="tab-content">
+                    {% if auth({'tinyms.entity.account.list'}) %}
+                    <div class="tab-pane active" id="account_panel">
+                        <div class="alert alert-info">创建帐号有两种方式: 1,注册并验证通过; 2,管理员创建并绑定到指定人员</div>
+                        <div class="row">
+                            <div class="col-lg-9">
+                                <div class="panel">
+                                    <div class="panel-body">
+                                        {% module DataView(id="AccountDataTable",
+                                        view="tinyms.core.view.AccountManager",
+                                        cols=['login_name','name','email','enabled','last_logon_time','create_time'],
+                                        titles=['ID','姓名','邮箱','激活','最后登录','创建时间'],
+                                        search_tip="可搜索帐号、姓名、邮箱",
+                                        autoform=False,
+                                        checkable=False,
+                                        point_list = "tinyms.entity.account.list",
+                                        point_view = "tinyms.entity.account.view",
+                                        point_add = "tinyms.entity.account.add",
+                                        point_update = "tinyms.entity.account.update",
+                                        point_delete = "tinyms.entity.account.delete"
+                                        ) %}
+                                        {% module panel_start("AccountDataTable") %}
+                                        {% module datagrid_form_start("AccountDataTable") %}
+                                            <div class="form-group">
+                                            <label for="login_name" class="col-lg-3 control-label">帐号</label>
+                                            <div class="col-lg-8">
+                                            <input type="text" class="form-control" id="login_name" name="login_name" minlength="5" required>
+                                            </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                            <label for="password" class="col-lg-3 control-label">密码</label>
+                                            <div class="col-lg-8">
+                                            <input type="password" class="form-control" id="password" name="password" minlength="8">
+                                            </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                            <label for="repassword" class="col-lg-3 control-label">密码确认</label>
+                                            <div class="col-lg-8">
+                                            <input type="password" class="form-control" id="repassword" name="repassword" minlength="8" equalTo="#password">
+                                            </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                            <label for="archives_id" class="col-lg-3 control-label">绑定用户</label>
+                                            <div class="col-lg-8">
+                                            {% module AutoComplete(id="archives_id"
+                                                ,item_tpl="<li data-value='${name}' data-key='${id}'>${name}<i>(${email})</i></li>"
+                                                ,provider="tinyms.core.ac.FindArchivesAutoComplete"
+                                                ,placeholder="根据姓名、邮箱、别名、人员编码搜索"
+                                                ) %}
+                                            </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                            <label for="enabled" class="col-lg-3 control-label">激活</label>
+                                            <div class="col-lg-8">
+                                                <select id="enabled" name="enabled" class="form-control">
+                                                    <option value="0">否</option>
+                                                    <option value="1">是</option>
+                                                </select>
+                                            </div>
+                                            </div>
+                                        {% module datagrid_form_end("AccountDataTable","tinyms.core.view.AccountManager","view") %}
+                                        {% module panel_end() %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="panel" id="account_role_edit_panel">
+                                    <header class="panel-heading"><span style="color: red;" id="current_select_user_name"></span> 角色</header>
+                                    <input id="current_select_user_id" type="hidden"/>
+                                        <div class="list-group">
+                                            {% for role in data['roles_for_account'] %}
+                                            <div class="list-group-item">
+                                                <input type="checkbox" value="{{role[0]}}" onclick="account_role_save(this);"/> {{role[1]}}
+                                            </div>
+                                            {% end %}
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% end %}
+                    {% if auth({'tinyms.entity.role.list'}) %}
+                    <div class="tab-pane" id="role_panel">
+                        <div>
+                            {% module DataTable(id="RoleDataTable",
+                            entity="tinyms.core.entity.Role",
+                            cols=['name','description'],
+                            titles=['名称','用途'],
+                            search_fields=["name","description"],
+                            search_tip="可搜索角色名称、用途",
+                            autoform=False,
+                            point_list = "tinyms.entity.role.list",
+                            point_view = "tinyms.entity.role.view",
+                            point_add = "tinyms.entity.role.add",
+                            point_update = "tinyms.entity.role.update",
+                            point_delete = "tinyms.entity.role.delete"
+                            ) %}
+                            {% module panel_start("RoleDataTable") %}
+                            {% module datagrid_form_start("RoleDataTable") %}
+
+                            <div class="form-group">
+                                <label for="name" class="col-lg-3 control-label">名称</label>
+
+                                <div class="col-lg-8">
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description" class="col-lg-3 control-label">用途</label>
+
+                                <div class="col-lg-8">
+                                    <input type="text" class="form-control" id="description" name="description">
+                                </div>
+                            </div>
+
+                            {% module datagrid_form_end("RoleDataTable","tinyms.core.entity.Role") %}
+                            {% module panel_end() %}
+                        </div>
+                        <!-- left tab -->
+                        <section class="panel">
+                            <header class="panel-heading text-right">
+                                <ul class="nav nav-tabs pull-left" id="security_points_tab">
+                                    {% for cat in data["categories"] %}
+                                    <li><a href="#points_group_{{ cat[2] }}" data-toggle="tab">{{ cat[0] }}</a></li>
+                                    {% end %}
+                                </ul>
+                                <span class="hidden-sm"><a class="btn-link" onclick="check_or_uncheck(this,'all');">全选/反选</a> | {% if auth({'tinyms.entity.role.points.update'}) %} <a
+                                        class="btn-link" onclick="security_points_save(this);"><i class="icon-save"></i>保存</a>
+                                    <small><em>( 给`<span class="text-danger" id="role_name_to_assign">角色</span>`指定权限 )</em></small> {% end %}
+                                </span>
+                            </header>
+                            {% if auth({'tinyms.entity.role.points.view'}) %}
+                            <div class="panel-body" id="security_points_edit_panel">
+                                <div class="tab-content">
+                                    {% for cat in data["categories"] %}
+                                    <div class="tab-pane fade" id="points_group_{{ cat[2] }}">
+                                        <div class="row">
+                                            {% for g in cat[1] %}
+                                            <div class="col-sm-6 col-md-3">
+                                                <div class="thumbnail" style="border: 0px;">
+                                                    <section class="panel">
+                                                        <header class="panel-heading">{{ g[0] }}
+                                                            <a class="pull-right btn-link"
+                                                               onclick="check_or_uncheck(this,'sub');">全选/反选</a>
+                                                        </header>
+                                                        <ul class="list-group">
+                                                            {% for p in g[1] %}
+                                                            <li class="list-group-item">
+                                                                <input type="checkbox" datakey="{{ p.key_ }}" value="{{ p.id }}"
+                                                                       id="security_point_{{ p.id }}"/> {{ p.description }}
+                                                            </li>
+                                                            {% end %}
+                                                        </ul>
+                                                    </section>
+                                                </div>
+                                            </div>
+                                            {% end %}
+                                        </div>
+                                    </div>
+                                    {% end %}
+                                </div>
+                            </div>
+                            {% end %}
+                        </section>
+                        <!-- / left tab -->
+                    </div>
+                    {% end %}
+                    <div class="tab-pane" id="org_post_panel">
+                        <div class="row">
+                            <div class="col-lg-5">
+                                {% module TermTaxonomyEditor(id="OrgTreeView",taxonomy="Org",placeholder="组织/部门",
+                                point_list = "tinyms.view.orgtree.list",
+                                point_add = "tinyms.view.orgtree.add",
+                                point_update = "tinyms.view.orgtree.update",
+                                point_delete = "tinyms.view.orgtree.delete"
+                                ) %}
+                            </div>
+                            <div class="col-lg-7">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- / right tab -->
+
+    </div>
+</div>
+{% end %}

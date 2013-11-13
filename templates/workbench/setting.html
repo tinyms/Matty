@@ -1,0 +1,57 @@
+{% extends "master.html" %}
+{% block title %}设置{% end %}
+{% block header %}
+<script type="text/javascript">
+    function save_setting(self){
+        $("#setting_form").ajaxSubmit({
+            "dataType": "json", "url": "/api/tinyms.core.setting/save", "type": "post",
+            "success": function (msg, statusText, xhr, $form) {
+                if (msg == "success") {
+                    toastr.success("保存成功!")
+                } else {
+                    toastr.error("保存失败!")
+                }
+            }
+        });
+    }
+    $(document).ready(function(){
+        $('#setting_tab a:first').tab('show');
+        $.post("/api/tinyms.core.setting/load",{},function(data){
+            for (var k in data) {
+                $("#" + k).val(data[k]);
+            }
+        },"json");
+    });
+</script>
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-gears"></i>设置</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <form id="setting_form">
+                <section class="panel">
+                    <header class="panel-heading text-right">
+                        <ul class="nav nav-tabs pull-left" id="setting_tab">
+                            {% for k in items.keys() %}
+                            <li><a href="#{{items[k].id}}" data-toggle="tab">{{items[k].title}}</a></li>
+                            {% end %}
+                        </ul>
+                        <span class="hidden-sm"><a class="btn-link" onclick="save_setting(this);"><i class="icon-save"></i>保存</a></span>
+                    </header>
+                    <div class="panel-body">
+                        <div class="tab-content">
+                            {% for k in items.keys() %}
+                            <div class="tab-pane" id="{{items[k].id}}">{% module Template(items[k].tpl) %}</div>
+                            {% end %}
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% end %}

@@ -1,0 +1,14 @@
+{
+    "js":[
+        "json2.js",
+        "mustache.js",
+        "jquery-1.10.2.min.js",
+        "jquery.number.min.js",
+        "jquery.form.min.js",
+        "validate/jquery.validate.min.js",
+        "validate/additional-methods.min.js",
+        "validate/messages_zh.js",
+        "tinyms.utils.js"
+    ],
+    "css":[]
+}
