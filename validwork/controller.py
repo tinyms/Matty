@@ -3,14 +3,14 @@ __author__ = 'tinyms'
 import random
 import uuid
 
-from sqlalchemy import func
+from sqlalchemy import func, asc
 
 from tinyms.core.web import IAuthRequest, IRequest
 from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api
 from tinyms.core.orm import SessionFactory
 from tinyms.core.entity import Archives
 from tinyms.core.common import Utils
-from validwork.entity import ValidWorkTimeBlock, ValidWorkScheduleTask, ValidWorkFingerTemplateKey, ValidWorkFingerTemplate
+from validwork.entity import *
 
 
 @sidebar("/validwork", "/validwork/schedule/task", "考勤系统", "tinyms.sidebar.validwork.main.show")
@@ -267,3 +267,105 @@ class FingerTemplateSign():
 class FingerSignTest(IRequest):
     def get(self, *args, **kwargs):
         self.render("validwork/test.html")
+
+
+#考勤机交互
+
+# GET /iclock/cdata?SN=xxxxxx
+@route("/iclock/cdata")
+class IClockCData(IRequest):
+    def get(self, *args, **kwargs):
+        sn = self.get_argument("SN")
+        opts = self.get_argument("options")
+        stamp = Utils.parse_int(self.get_argument("Stamp"))
+        op_stamp = Utils.parse_int(self.get_argument("OpStamp"))
+        self.set_header("Content-Type", "text/plain;charset=utf-8")
+        if opts == "all":
+            self.write("GET OPTION FROM:" + sn + r"\n")
+            self.write(r"ErrorDelay=60\n")
+            self.write(r"Delay=15\n")
+            self.write(r"TransInterval=1\n")
+            self.write(r"TransFlag=1111000000\n")
+            self.write(r"Realtime=1\n")
+            self.write(r"Encrypt=0\n")
+            self.write(r"TransTimes=00:00;14:05\n")
+            sf = SessionFactory.new()
+            machine = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
+            if machine:
+                if machine.stamp:
+                    self.write("Stamp=" + machine.stamp + r"\n")
+                if machine.opstamp:
+                    self.write("OpStamp=" + machine.opstamp + r"\n")
+                if machine.photo_stamp:
+                    self.write("PhotoStamp=" + machine.photo_stamp + r"\n")
+            else:
+                #初始化一个起始交互日期
+                a = 10000000
+                self.write("Stamp=" + a + r"\n")
+                self.write("OpStamp=" + a + r"\n")
+                self.write("PhotoStamp=" + a + r"\n")
+        else:
+            #记录机器访问数据
+            sf = SessionFactory.new()
+            machine = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
+            if machine:
+                machine.opstamp = op_stamp
+                machine.stamp = stamp
+                sf.commit()
+                #登记指纹
+            if stamp and stamp > 0:
+                records = list()
+                for r in records:
+                    archives_id = r[0]
+                    touch_time = r[1]
+                self.write("OK")
+            elif not op_stamp:
+                self.write("OK")
+
+
+#GET /iclock/getrequest?SN=xxxxxx
+#服务器发送到考勤机命令处理
+@route("/iclock/getrequest")
+class IClockCommand(IRequest):
+    def get(self, *args, **kwargs):
+        self.set_header("Content-Type", "text/plain;charset=utf-8")
+        sn = self.get_argument("SN")
+        ip = self.get_argument("INFO")
+        #记录当前机器信息
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
+        if not obj:
+            m = ValidWorkMachine()
+            m.sn = sn
+            m.ip = ip
+            m.last_connect_time = Utils.current_datetime()
+            sf.add(m)
+            sf.commit()
+        else:
+            obj.ip = ip
+            obj.last_connect_time = Utils.current_datetime()
+            sf.commit()
+
+        #取出一条命令下发给机器执行
+        cmd = sf.query(ValidWorkCommands.id, ValidWorkCommands.cmd) \
+            .filter(ValidWorkCommands.sn == sn) \
+            .order_by(asc(ValidWorkCommands.id)).limit(1).scalar()
+        if cmd:
+            self.write("C:%s:%s" % (cmd[0], cmd[1]))
+            pass
+
+
+# POST /iclock/devicecmd?SN=xxxxxx&&ID=iiii&Return=vvvv&CMD=ssss
+#机器执行完命令后的反馈
+@route("/iclock/devicecmd")
+class IClockDeviceCommandReturn(IRequest):
+    def post(self, *args, **kwargs):
+        self.set_header("Content-Type", "text/plain;charset=utf-8")
+        sn = self.get_argument("SN")
+        id_ = self.get_argument("ID")
+        rt = self.get_argument("Return")
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkCommands).get(Utils.parse_int(id_))
+        sf.delete(obj)
+        sf.commit()
+        self.write("OK")

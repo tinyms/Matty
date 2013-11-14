@@ -26,6 +26,7 @@ class ValidWorkFingerTemplateKey(Entity, Simplify):
 #下发到考勤机命令集合
 @many_to_one("ValidWorkMachine")
 class ValidWorkCommands(Entity, Simplify):
+    sn = Column(String(20), nullable=False)
     cmd = Column(Text(), nullable=False)
     create_date = Column(DateTime(), nullable=False)
     #validworkmachine
