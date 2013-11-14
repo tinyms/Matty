@@ -1,6 +1,97 @@
 __author__ = 'tinyms'
 
+from sqlalchemy import asc, func
 from tinyms.core.annotation import points, reg_point
+from tinyms.core.common import Utils
+from tinyms.core.orm import SessionFactory
+from validwork.entity import *
+from datetime import datetime, date, time, timedelta
+
+
+class ValidWorkHelper():
+    @staticmethod
+    def push_command_to_machine(sn, cmd):
+        sf = SessionFactory.new()
+        vwc = ValidWorkCommands()
+        vwc.sn = sn
+        vwc.cmd = cmd
+        vwc.create_date = Utils.current_datetime()
+        sf.add(vwc)
+        sf.commit()
+
+    @staticmethod
+    def push_user_fp_to_machine(sn, pin, name, fid, tpl):
+        create = r"DATA DEL_USER PIN=%i\r\nDATA USER PIN=%i\tName=%s\r\n" % (pin, pin, name)
+        update = r"DATA FP PIN=%i\tFID=%i\tTMP=%s\r\n" % (pin, fid, tpl)
+        sf = SessionFactory.new()
+        vwc = ValidWorkCommands()
+        vwc.sn = sn
+        vwc.cmd = create
+        vwc.create_date = Utils.current_datetime()
+        vwc1 = ValidWorkCommands()
+        vwc1.sn = sn
+        vwc1.cmd = update
+        vwc1.create_date = Utils.current_datetime()
+        sf.add_all([vwc, vwc1])
+        sf.commit()
+
+    @staticmethod
+    def push_users_fp_to_machine(sn, items):
+        """
+
+        @param sn:
+        @param items: [(pin, name, fid, tpl)..]
+        """
+        sf = SessionFactory.new()
+        cmds = list()
+        for item in items:
+            create = r"DATA DEL_USER PIN=%i\r\nDATA USER PIN=%i\tName=%s\r\n" % (item[0], item[0], item[1])
+            update = r"DATA FP PIN=%i\tFID=%i\tTMP=%s\r\n" % (item[0], item[2], item[3])
+            vwc = ValidWorkCommands()
+            vwc.sn = sn
+            vwc.cmd = create
+            vwc.create_date = Utils.current_datetime()
+            vwc1 = ValidWorkCommands()
+            vwc1.sn = sn
+            vwc1.cmd = update
+            vwc1.create_date = Utils.current_datetime()
+            cmds += [vwc, vwc1]
+        sf.add_all(cmds)
+        sf.commit()
+
+    #线程后台定时运动
+    @staticmethod
+    def organization_of_work():
+        current_datetime = Utils.current_datetime()
+        sf = SessionFactory.new()
+        #列出所有考勤计划
+        tasks = sf.query(ValidWorkScheduleTask.id).all()
+        tasks = [task[0] for task in tasks]
+        for task in tasks:
+            #得到班次最小的时间点
+            min_time = sf.query(ValidWorkTimeBlock.start_time) \
+                .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
+                .order_by(asc(ValidWorkTimeBlock.start_time)) \
+                .filter(ValidWorkScheduleTask.id == task).limit(1).scalar()
+            if min_time:
+                #提前30分钟安排下一档工作
+                min_datetime = datetime.combine(current_datetime.date(), min_time)
+                start_datetime = min_datetime - timedelta(minutes=30)
+                if start_datetime <= current_datetime <= min_datetime:
+                    #当天是否已经安排完成
+                    e = sf.query(func.count(ValidWorkCheckOn.id))\
+                        .filter(ValidWorkCheckOn.task_id == task)\
+                        .filter(ValidWorkCheckOn.valid_start_time.date() == current_datetime.date()).scalar()
+                    if e == 0:
+                        #安排新的工作
+                        #1,得到拥有此考勤计划的所有人员ID
+                        #2,得到此考勤计划的所有班次
+                        #3,批量插入CheckOn
+                        pass
+                    pass
+                pass
+        pass
+
 
 @points()
 class ValidWorkPoints():

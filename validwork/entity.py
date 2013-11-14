@@ -81,7 +81,6 @@ class ValidWorkScheduleTask(Entity, Simplify):
 #打卡登记
 #Archives实体内可以引用 validworkcheckons
 @many_to_one("Archives")
-@many_to_one("ValidWorkTimeBlock")
 class ValidWorkCheckOn(Entity, Simplify):
     check_time = Column(DateTime(), nullable=False)
     #正常上下班,迟到,早退,矿工
@@ -89,5 +88,6 @@ class ValidWorkCheckOn(Entity, Simplify):
     #有效范围，如果指纹没及时上传也可以正确更新用户状态
     valid_start_time = Column(DateTime(), nullable=False)
     valid_end_time = Column(DateTime(), nullable=False)
+    time_block_id = Column(Integer(), nullable=False)
+    task_id = Column(Integer(), nullable=False)
     #archives
-    #validworktimeblock
