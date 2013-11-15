@@ -312,12 +312,19 @@ class IClockCData(IRequest):
                 machine.opstamp = op_stamp
                 machine.stamp = stamp
                 sf.commit()
-                #登记指纹
+            #登记指纹
             if stamp and stamp > 0:
                 records = list()
                 for r in records:
                     archives_id = r[0]
                     touch_time = r[1]
+                    obj = sf.query(ValidWorkCheckOn)\
+                        .filter(ValidWorkCheckOn.archives_id == archives_id)\
+                        .filter(ValidWorkCheckOn.valid_start_time <= touch_time)\
+                        .filter(ValidWorkCheckOn.valid_end_time >= touch_time).limit().scalar()
+                    if obj:
+                        obj.check_time = touch_time
+                        sf.commit()
                 self.write("OK")
             elif not op_stamp:
                 self.write("OK")

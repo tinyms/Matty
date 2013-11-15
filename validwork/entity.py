@@ -63,7 +63,6 @@ class ValidWorkTimeBlock(Entity, Simplify):
     #早退区间,早于结束时间
     leave_early_space = Column(Integer(), default=0)
     #validworkscheduletasks
-    #validworkcheckons
 
 
 #任务计划，方便班次分配
@@ -82,7 +81,7 @@ class ValidWorkScheduleTask(Entity, Simplify):
 #Archives实体内可以引用 validworkcheckons
 @many_to_one("Archives")
 class ValidWorkCheckOn(Entity, Simplify):
-    check_time = Column(DateTime(), nullable=False)
+    check_time = Column(DateTime())
     #正常上下班,迟到,早退,矿工
     status = Column(Integer(), default=-1)
     #有效范围，如果指纹没及时上传也可以正确更新用户状态
