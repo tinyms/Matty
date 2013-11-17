@@ -1,15 +1,24 @@
 __author__ = 'tinyms'
 
+from datetime import datetime, timedelta
+import threading
 from sqlalchemy import asc, func
+
 from tinyms.core.annotation import points, reg_point
 from tinyms.core.common import Utils
 from tinyms.core.orm import SessionFactory
 from validwork.entity import *
 from tinyms.core.entity import Archives
-from datetime import datetime, date, time, timedelta
 
 
 class ValidWorkHelper():
+    __scheduler__ = None
+
+    @staticmethod
+    def start_scheduler():
+        ValidWorkHelper.__scheduler__ = ValidWorkSchedulerThread()
+        ValidWorkHelper.__scheduler__.start()
+
     @staticmethod
     def push_command_to_machine(sn, cmd):
         sf = SessionFactory.new()
@@ -60,13 +69,27 @@ class ValidWorkHelper():
         sf.add_all(cmds)
         sf.commit()
 
+
+#定时任务线程
+class ValidWorkSchedulerThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        import time
+        while True:
+            ValidWorkSchedulerThread.organization_of_work()
+            time.sleep(60*5)
+
     #线程后台定时运动，休眠5分钟
     @staticmethod
     def organization_of_work():
         current_datetime = Utils.current_datetime()
         sf = SessionFactory.new()
-        #标识-1的状态为矿工
-        updates = sf.query(ValidWorkCheckOn).filter(ValidWorkCheckOn.status == -1).all()
+        #标识-1的状态为旷工，这种情况是没有按指纹的，CheckOn 有效时间段结束时间已经过期的时候
+        updates = sf.query(ValidWorkCheckOn) \
+            .filter(ValidWorkCheckOn.status == -1) \
+            .filter(ValidWorkCheckOn.valid_end_time < current_datetime).all()
         for row in updates:
             row.status = 0
         sf.commit()
@@ -85,19 +108,19 @@ class ValidWorkHelper():
                 start_datetime = min_datetime - timedelta(minutes=30)
                 if start_datetime <= current_datetime <= min_datetime:
                     #当天是否已经安排完成
-                    e = sf.query(func.count(ValidWorkCheckOn.id))\
-                        .filter(ValidWorkCheckOn.task_id == task_id)\
+                    e = sf.query(func.count(ValidWorkCheckOn.id)) \
+                        .filter(ValidWorkCheckOn.task_id == task_id) \
                         .filter(ValidWorkCheckOn.valid_start_time.date() == current_datetime.date()).scalar()
 
                     if e == 0:
                         #安排新的工作
                         #1,得到拥有此考勤计划的所有人员ID
-                        usrs = sf.query(Archives.id).join(ValidWorkScheduleTask, Archives.validworkscheduletasks)\
+                        usrs = sf.query(Archives.id).join(ValidWorkScheduleTask, Archives.validworkscheduletasks) \
                             .filter(ValidWorkScheduleTask.id == task_id).all()
 
                         #2,得到此考勤计划的所有班次
-                        time_blocks = sf.query(ValidWorkTimeBlock)\
-                            .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks)\
+                        time_blocks = sf.query(ValidWorkTimeBlock) \
+                            .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
                             .filter(ValidWorkScheduleTask.id == task_id).all()
 
                         #3,批量插入CheckOn
@@ -123,7 +146,6 @@ class ValidWorkHelper():
                     pass
                 pass
         pass
-
 
 @points()
 class ValidWorkPoints():
@@ -168,3 +190,7 @@ class ValidWorkPoints():
         #reg_point("tinyms.validwork.entity.ValidWorkMachine.add", "考勤", "考勤机管理", "添加任务计划")
         reg_point("tinyms.validwork.entity.ValidWorkMachine.update", "考勤", "考勤机管理", "修改任务计划")
         #reg_point("tinyms.validwork.entity.ValidWorkMachine.delete", "考勤", "考勤机管理", "删除任务计划")
+
+
+        #启动任务分配管理器
+        ValidWorkHelper.start_scheduler()

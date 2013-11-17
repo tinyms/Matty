@@ -2,6 +2,7 @@ __author__ = 'tinyms'
 
 import random
 import uuid
+from datetime import datetime, timedelta
 
 from sqlalchemy import func, asc
 
@@ -312,22 +313,60 @@ class IClockCData(IRequest):
                 machine.opstamp = op_stamp
                 machine.stamp = stamp
                 sf.commit()
-            #登记指纹
+                #登记指纹
             if stamp and stamp > 0:
                 records = list()
                 for r in records:
                     archives_id = r[0]
                     touch_time = r[1]
-                    obj = sf.query(ValidWorkCheckOn)\
-                        .filter(ValidWorkCheckOn.archives_id == archives_id)\
-                        .filter(ValidWorkCheckOn.valid_start_time <= touch_time)\
-                        .filter(ValidWorkCheckOn.valid_end_time >= touch_time).limit().scalar()
-                    if obj:
-                        obj.check_time = touch_time
-                        sf.commit()
+                    self.detect_chkon_status(archives_id, touch_time)
                 self.write("OK")
             elif not op_stamp:
                 self.write("OK")
+
+    #得到当前打卡用户的状态，正常上班(1)，正常下班(2)，还是迟到(3)，早退(4)，旷工(0)另外计算
+    def detect_chkon_status(self, archives_id, touch_time):
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkCheckOn) \
+            .filter(ValidWorkCheckOn.archives_id == archives_id) \
+            .filter(ValidWorkCheckOn.valid_start_time <= touch_time) \
+            .filter(ValidWorkCheckOn.valid_end_time >= touch_time).limit().scalar()
+        if obj:
+            timeblock = sf.query(ValidWorkTimeBlock).get(obj.time_block_id)
+            if timeblock:
+                #探测用户状态
+                current_date = Utils.current_datetime().date()
+                #正常上班时间
+                work_start_time = datetime.combine(current_date, timeblock.start_time)
+                #正常下班时间
+                normal_out_time = datetime.combine(current_date, timeblock.end_time)
+                #正常上班打卡的开始时间(上班时间-正常上班打卡区间)
+                touchin_starttime = work_start_time - timedelta(minutes=timeblock.normal_in_space)
+                if touchin_starttime <= touch_time < work_start_time:
+                    status = 1
+                else:
+                    #视为迟到的结束时间(上班时间+视为迟到打卡区间)
+                    late_endtime = work_start_time + timedelta(minutes=timeblock.late_space)
+                    if work_start_time <= touch_time <= late_endtime:
+                        status = 3
+                    else:
+                        #正常下班打卡的结束时间(下班时间+视为正常打卡区间)
+                        touchout_endtime = normal_out_time + timedelta(minutes=timeblock.normal_out_space)
+                        if normal_out_time < touch_time <= touchout_endtime:
+                            status = 2
+                        else:
+                            #视为早退的打卡开始时间(下班时间-视为早退打卡区间)
+                            early_leave_starttime = normal_out_time - timedelta(minutes=timeblock.leave_early_space)
+                            if early_leave_starttime <= touch_time <= normal_out_time:
+                                status = 4
+                            else:
+                                #视为旷工
+                                status = 0
+                pass
+                #更新CheckOn用户状态
+                obj.check_time = touch_time
+                obj.status = status
+                sf.commit()
 
 
 #GET /iclock/getrequest?SN=xxxxxx
@@ -376,3 +415,4 @@ class IClockDeviceCommandReturn(IRequest):
         sf.delete(obj)
         sf.commit()
         self.write("OK")
+
