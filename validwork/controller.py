@@ -275,54 +275,73 @@ class FingerSignTest(IRequest):
 # GET /iclock/cdata?SN=xxxxxx
 @route("/iclock/cdata")
 class IClockCData(IRequest):
+    def post(self, *args, **kwargs):
+
+        #记录机器访问数据
+        params_ = self.wrap_params_to_dict()
+        sn = params_.get("SN")
+        sf = SessionFactory.new()
+        machine = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
+        table = params_.get("table")
+        if table == "OPERLOG":
+            op_stamp = params_.get("OpStamp")
+            if op_stamp and machine:
+                machine.opstamp = Utils.parse_int(op_stamp)
+                sf.commit()
+            self.write("OK")
+        elif table == "ATTLOG":
+            stamp = params_.get("Stamp")
+            if stamp and machine:
+                stamp = Utils.parse_int(stamp)
+                machine.stamp = stamp
+                sf.commit()
+
+            if stamp and stamp > 0:
+                records_text = self.request.body
+                if records_text:
+                    records_text = records_text.decode("utf-8")
+                    records = list()
+                    for line in records_text.split("\n"):
+                        items = line.split("\t")
+                        if len(items) >= 2:
+                            records.append((items[0], items[1]))
+                    print(records)
+                    for r in records:
+                        archives_id = r[0]
+                        touch_time = datetime.strptime(r[1], "%Y-%m-%d %H:%M:%S")
+                        print(archives_id, touch_time)
+                        self.detect_chkon_status(archives_id, touch_time)
+                    self.write("OK")
+
     def get(self, *args, **kwargs):
         sn = self.get_argument("SN")
         opts = self.get_argument("options")
-        stamp = Utils.parse_int(self.get_argument("Stamp"))
-        op_stamp = Utils.parse_int(self.get_argument("OpStamp"))
         self.set_header("Content-Type", "text/plain;charset=utf-8")
         if opts == "all":
-            self.write("GET OPTION FROM:" + sn + r"\n")
-            self.write(r"ErrorDelay=60\n")
-            self.write(r"Delay=15\n")
-            self.write(r"TransInterval=1\n")
-            self.write(r"TransFlag=1111000000\n")
-            self.write(r"Realtime=1\n")
-            self.write(r"Encrypt=0\n")
-            self.write(r"TransTimes=00:00;14:05\n")
+            self.write("GET OPTION FROM:" + sn + "\n")
+            self.write("ErrorDelay=60\n")
+            self.write("Delay=15\n")
+            self.write("TransInterval=1\n")
+            self.write("TransFlag=1111000000\n")
+            self.write("Realtime=1\n")
+            self.write("Encrypt=0\n")
+            self.write("TransTimes=00:00;14:05\n")
             sf = SessionFactory.new()
             machine = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
             if machine:
                 if machine.stamp:
-                    self.write("Stamp=" + machine.stamp + r"\n")
+                    self.write("Stamp=" + str(machine.stamp) + "\n")
                 if machine.opstamp:
-                    self.write("OpStamp=" + machine.opstamp + r"\n")
+                    self.write("OpStamp=" + str(machine.opstamp) + "\n")
                 if machine.photo_stamp:
-                    self.write("PhotoStamp=" + machine.photo_stamp + r"\n")
+                    self.write("PhotoStamp=" + str(machine.photo_stamp) + "\n")
             else:
                 #初始化一个起始交互日期
-                a = 10000000
-                self.write("Stamp=" + a + r"\n")
-                self.write("OpStamp=" + a + r"\n")
-                self.write("PhotoStamp=" + a + r"\n")
-        else:
-            #记录机器访问数据
-            sf = SessionFactory.new()
-            machine = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
-            if machine:
-                machine.opstamp = op_stamp
-                machine.stamp = stamp
-                sf.commit()
-                #登记指纹
-            if stamp and stamp > 0:
-                records = list()
-                for r in records:
-                    archives_id = r[0]
-                    touch_time = r[1]
-                    self.detect_chkon_status(archives_id, touch_time)
-                self.write("OK")
-            elif not op_stamp:
-                self.write("OK")
+                a = "100000000"
+                self.write("Stamp=" + a + "\n")
+                self.write("OpStamp=" + a + "\n")
+                self.write("PhotoStamp=" + a + "\n")
+
 
     #得到当前打卡用户的状态，正常上班(1)，正常下班(2)，还是迟到(3)，早退(4)，旷工(0)另外计算
     def detect_chkon_status(self, archives_id, touch_time):
@@ -330,7 +349,7 @@ class IClockCData(IRequest):
         obj = sf.query(ValidWorkCheckOn) \
             .filter(ValidWorkCheckOn.archives_id == archives_id) \
             .filter(ValidWorkCheckOn.valid_start_time <= touch_time) \
-            .filter(ValidWorkCheckOn.valid_end_time >= touch_time).limit().scalar()
+            .filter(ValidWorkCheckOn.valid_end_time >= touch_time).limit(1).scalar()
         if obj:
             timeblock = sf.query(ValidWorkTimeBlock).get(obj.time_block_id)
             if timeblock:
@@ -375,8 +394,9 @@ class IClockCData(IRequest):
 class IClockCommand(IRequest):
     def get(self, *args, **kwargs):
         self.set_header("Content-Type", "text/plain;charset=utf-8")
-        sn = self.get_argument("SN")
-        ip = self.get_argument("INFO")
+        params_ = self.wrap_params_to_dict()
+        sn = params_.get("SN")
+        ip = self.request.remote_ip
         #记录当前机器信息
         sf = SessionFactory.new()
         obj = sf.query(ValidWorkMachine).filter(ValidWorkMachine.sn == sn).limit(1).scalar()
@@ -406,6 +426,8 @@ class IClockCommand(IRequest):
 @route("/iclock/devicecmd")
 class IClockDeviceCommandReturn(IRequest):
     def post(self, *args, **kwargs):
+        print(self.request.arguments)
+        print(self.request.files)
         self.set_header("Content-Type", "text/plain;charset=utf-8")
         sn = self.get_argument("SN")
         id_ = self.get_argument("ID")
