@@ -40,3 +40,8 @@ nosetests.xml
 .project
 .pydevproject
 theme
+Debug
+Release
+*.user
+*.ncb
+*.suo
