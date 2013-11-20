@@ -4,7 +4,7 @@
 #pragma once
 #include "CZKFPEngX.h"
 #include "afxwin.h"
-
+#include "Utils.h"
 
 // CFingerTemplateHelperDlg ¶Ô»°¿ò
 class CFingerTemplateHelperDlg : public CDialog
@@ -40,14 +40,16 @@ public:
 	afx_msg void OnBnClickedPickBtn();
 public:
 	bool m_device_cnn;
+	int m_pick_count;
 public:
 	void EnableButtons(bool disabled);
 public:
 	DECLARE_EVENTSINK_MAP()
 public:
 	void OnEnrollZkfpengx(BOOL ActionResult, const VARIANT& ATemplate);
-public:
 	void OnImageReceivedZkfpengx(BOOL* AImageValid);
 public:
 	afx_msg void OnClose();
+public:
+	afx_msg void OnEnChangeNetkeyEdit();
 };

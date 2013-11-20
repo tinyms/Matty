@@ -168,6 +168,8 @@ class ApiHandler(IRequest):
                 obj = cls()
                 if hasattr(obj, method_name):
                     setattr(obj, "request", self)
+                    setattr(obj, "body", self.request.body)
+                    setattr(obj, "files", self.request.files)
                     setattr(obj, "__params__", self.wrap_params_to_dict())
                     setattr(obj, "param", lambda key: obj.__params__.get(key))
                     func = getattr(obj, method_name)

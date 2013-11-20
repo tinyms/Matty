@@ -219,11 +219,13 @@ class FingerTemplateSign():
         sf = SessionFactory.new()
         obj = sf.query(ValidWorkFingerTemplateKey) \
             .filter(ValidWorkFingerTemplateKey.ukey == self.param("ukey")).scalar()
-        tpl = self.param("tpl")
-        if obj and tpl:
-            obj.tpl = tpl
-            sf.commit()
-            return "success"
+        body = self.body
+        if obj and body:
+            tpl = body.decode("utf-8")
+            if tpl:
+                obj.tpl = tpl
+                sf.commit()
+                return "success"
         return "failure"
 
     def value(self):

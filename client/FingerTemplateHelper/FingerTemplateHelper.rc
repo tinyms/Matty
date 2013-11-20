@@ -65,6 +65,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\FingerTemplateHelper.ico"
+IDI_APP_ICON            ICON                    "res\\app.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -91,9 +92,10 @@ BEGIN
     LTEXT           "密钥:",IDC_STATIC,9,10,21,8
     EDITTEXT        IDC_NETKEY_EDIT,32,7,219,14,ES_AUTOHSCROLL
     GROUPBOX        "指纹影像",IDC_STATIC,7,31,244,195
-    PUSHBUTTON      "开始采集",IDC_PICK_BTN,127,232,50,18
-    PUSHBUTTON      "连接指纹采集仪",IDC_CNN_DEVICE_BTN,181,232,70,17
+    PUSHBUTTON      "开始采集",IDC_PICK_BTN,149,232,46,18
+    PUSHBUTTON      "连接采集仪",IDC_CNN_DEVICE_BTN,198,232,53,17
     CONTROL         "",IDC_ZKFPENGX,"{CA69969C-2F27-41D3-954D-A48B941C3BA7}",WS_TABSTOP,14,43,60,25
+    LTEXT           "",IDC_TIP_STATIC,14,237,131,8
 END
 
 
@@ -119,13 +121,13 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "CompanyName", "TODO: <公司名>"
-            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "CompanyName", "广州粤阳信息科技公司"
+            VALUE "FileDescription", "指纹采集助手"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "FingerTemplateHelper.exe"
-            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "LegalCopyright", "(C) 广州粤阳信息科技公司。保留所有权利。"
             VALUE "OriginalFilename", "FingerTemplateHelper.exe"
-            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductName", "指纹采集助手"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END
