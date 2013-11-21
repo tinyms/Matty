@@ -170,7 +170,7 @@ class ValidWorkArchivesDataView():
 
 @ajax("tinyms.validwork.FingerAndTaskAssign")
 class FingerAndTaskAssign():
-    __export__ = ["task_assign", "finger_tpl_save"]
+    __export__ = ["task_assign", "finger_tpl_save", "list_fingers"]
 
     def task_assign(self):
         archives_id = Utils.parse_int(self.param("id"))
@@ -186,6 +186,7 @@ class FingerAndTaskAssign():
                 return ["success"]
         return ["failure"]
 
+    #注册登记指纹模板
     def finger_tpl_save(self):
         index = Utils.parse_int(self.param("index"))
         tpl = self.param("tpl")
@@ -210,6 +211,15 @@ class FingerAndTaskAssign():
                 sf.commit()
                 return ["success"]
         return ["failure"]
+
+    #列出某一账户拥有多少个指头的指纹
+    def list_fingers(self):
+        sf = SessionFactory.new()
+        archives_id = Utils.parse_int(self.param("archives_id"))
+        items = sf.query(ValidWorkFingerTemplate.finger_index)\
+            .filter(ValidWorkFingerTemplate.archives_id == archives_id).all()
+        items = [item[0] for item in items]
+        return items
 
 
 #指纹登记

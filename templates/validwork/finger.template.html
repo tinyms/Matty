@@ -33,6 +33,25 @@ function view_and_edit_user_finger(elem,v){
     var row = ValidWorkArchivesDataView_.GetRow(v);
     $("#finger_tpl_usrname").html(row.name);
     current_selected_user_id = row.id;
+    list_fingers();
+    {% end %}
+}
+function list_fingers(){
+    {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+    var params_ = {archives_id:current_selected_user_id};
+    validwork.controller.FingerAndTaskAssign.list_fingers(params_,function(b,data){
+        if(b){
+            var radios = $(":radio[name='finger_index']");
+            for(var k=0; k<data.length; k++){
+                var finger_index = data[k]+"";
+                $.each(radios,function(i,elem){
+                    if($(elem).val()==finger_index){
+                        $("#finger_index_icon"+finger_index).show();
+                    }
+                });
+            }
+		}else{toastr.error("网络错误!");}
+    });
     {% end %}
 }
 function view_and_edit_user_schduletask(elem,v){
@@ -99,10 +118,13 @@ function event_timer(){
                                 var msg = data[0];
                                 if (msg == "success") {
                                     finger_index_panel_disable(false);
-                                    toastr.success("保存成功!")
+                                    list_fingers();
+                                    toastr.success("保存成功!");
                                 } else {
-                                    toastr.error("保存失败!")
+                                    toastr.error("保存失败!");
                                 }
+                            }else{
+                                toastr.error("网络错误!");
                             }
                         });
                     }
@@ -124,6 +146,7 @@ function cancel_fingertpl_reg(){
 var current_select_user_finger_index = "";
 var timer = null;
 $(document).ready(function(){
+    $(".icon-ok-hidden").hide();
 	$("#current_task_name").html("可用");
     $("#schedule_task").hide();
     $("#finger_tpl_panel_menu").hide();
@@ -144,6 +167,7 @@ $(document).ready(function(){
             finger_index_panel_disable(true);
             timer = setInterval(event_timer,1000);
             $("#finger_tpl_panel_menu").show();
+            $("#finger_index_icon"+current_select_user_finger_index).hide();
         });
     });
     {% end %}
@@ -203,16 +227,16 @@ $(document).ready(function(){
                     </ul>
                 </div>
                 <div class="list-group" id="finger_index_panel">
-                    <div class="list-group-item"><input type="radio" id="finger_index_1" name="finger_index" value="1"/> 右手拇指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_2" name="finger_index" value="2"/> 右手食指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_3" name="finger_index" value="3"/> 右手中指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_4" name="finger_index" value="4"/> 右手无名指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_5" name="finger_index" value="5"/> 右手小指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_6" name="finger_index" value="6"/> 左手拇指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_7" name="finger_index" value="7"/> 左手食指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_8" name="finger_index" value="8"/> 左手中指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_9" name="finger_index" value="9"/> 左手无名指</div>
-					<div class="list-group-item"><input type="radio" id="finger_index_10" name="finger_index" value="10"/> 左手小指</div>
+                    <div class="list-group-item"><input type="radio" id="finger_index_1" name="finger_index" value="1"/> 右手拇指 <i id="finger_index_icon1" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_2" name="finger_index" value="2"/> 右手食指 <i id="finger_index_icon2" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_3" name="finger_index" value="3"/> 右手中指 <i id="finger_index_icon3" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_4" name="finger_index" value="4"/> 右手无名指 <i id="finger_index_icon4" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_5" name="finger_index" value="5"/> 右手小指 <i id="finger_index_icon5" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_6" name="finger_index" value="6"/> 左手拇指 <i id="finger_index_icon6" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_7" name="finger_index" value="7"/> 左手食指 <i id="finger_index_icon7" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_8" name="finger_index" value="8"/> 左手中指 <i id="finger_index_icon8" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_9" name="finger_index" value="9"/> 左手无名指 <i id="finger_index_icon9" class="icon-ok text-success icon-ok-hidden"></i></div>
+					<div class="list-group-item"><input type="radio" id="finger_index_10" name="finger_index" value="10"/> 左手小指 <i id="finger_index_icon10" class="icon-ok text-success icon-ok-hidden"></i></div>
                     <div class="list-group-item" style="color: darkgray;">* 同一手指可以指纹覆盖</div>
                 </div>
             </div>
