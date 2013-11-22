@@ -1,6 +1,35 @@
 {% extends "../workbench/master.html" %}
 {% block title %}考勤机{% end %}
 {% block header %}
+<script type="text/javascript" src="/ajax/tinyms.validwork.FingerAndTaskAssign.js"></script>
+<script type="text/javascript">
+    function download_finger_tpl(elem,v){
+        {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+            var params_ = {machine_id:v}
+            validwork.controller.FingerAndTaskAssign.push_finger_tpl_to_machine(params_,function(b,data){
+                if(b){
+                    var msg = data[0];
+                    if (msg == "success") {
+                        toastr.success("推送成功!")
+                    } else {
+                        toastr.error("推送失败!")
+                    }
+                }else {
+                   toastr.error("推送失败!")
+                }
+            });
+        {% end %}
+    }
+    function datatable_render_actionbar(id,k,v,row){
+        var action_btns = "";
+        if(id=="ValidWorkMachineDataTable"){
+              {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
+              action_btns += '<a class="btn-link" title="推送指纹到考勤机" onclick="download_finger_tpl(this,' + v + ');"><i class="icon-download"></i></a>';
+              {% end %}
+        }
+        return action_btns;
+    }
+</script>
 {% end %}
 {% block workspace %}
 <section class="main padder">

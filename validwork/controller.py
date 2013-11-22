@@ -14,6 +14,7 @@ from tinyms.core.orm import SessionFactory
 from tinyms.core.entity import Archives
 from tinyms.core.common import Utils
 from tinyms.dao.account import AccountHelper
+from validwork.gerneric import ValidWorkHelper
 from validwork.entity import *
 
 
@@ -70,6 +71,7 @@ class HolidayController(IAuthRequest):
 class MachineController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/machine.html")
+
 
 @route("/validwork/download/client")
 class DownloadFingerClient(IAuthRequest):
@@ -236,8 +238,9 @@ class ValidWorkArchivesDataView():
 
 @ajax("tinyms.validwork.FingerAndTaskAssign")
 class FingerAndTaskAssign():
-    __export__ = ["task_assign", "finger_tpl_save", "list_fingers"]
+    __export__ = ["task_assign", "finger_tpl_save", "list_fingers", "push_finger_tpl_to_machine"]
 
+    @auth({"tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit"}, ["UnAuth"])
     def task_assign(self):
         archives_id = Utils.parse_int(self.param("id"))
         task_id = Utils.parse_int(self.param("st_id"))
@@ -253,6 +256,7 @@ class FingerAndTaskAssign():
         return ["failure"]
 
     #注册登记指纹模板
+    @auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}, ["UnAuth"])
     def finger_tpl_save(self):
         index = Utils.parse_int(self.param("index"))
         tpl = self.param("tpl")
@@ -261,6 +265,13 @@ class FingerAndTaskAssign():
         obj = sf.query(ValidWorkFingerTemplate) \
             .filter(ValidWorkFingerTemplate.archives_id == archives_id) \
             .filter(ValidWorkFingerTemplate.finger_index == index).limit(1).scalar()
+
+        machines_sn = sf.query(ValidWorkMachine.sn).all()
+        machines_sn = [sn[0] for sn in machines_sn]
+        name = sf.query(Archives.name).filter(Archives.id == archives_id).limit(1).scalar()
+        for sn in machines_sn:
+            ValidWorkHelper.push_user_fp_to_machine(sn, archives_id, name, index, tpl)
+
         if obj:
             obj.tpl = tpl
             sf.commit()
@@ -279,14 +290,30 @@ class FingerAndTaskAssign():
         return ["failure"]
 
     #列出某一账户拥有多少个指头的指纹
+    @auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.list"}, [])
     def list_fingers(self):
         sf = SessionFactory.new()
         archives_id = Utils.parse_int(self.param("archives_id"))
-        items = sf.query(ValidWorkFingerTemplate.finger_index)\
+        items = sf.query(ValidWorkFingerTemplate.finger_index) \
             .filter(ValidWorkFingerTemplate.archives_id == archives_id).all()
         items = [item[0] for item in items]
         return items
 
+    #推送所有指纹至机器
+    @auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}, ["UnAuth"])
+    def push_finger_tpl_to_machine(self):
+        sf = SessionFactory.new()
+        sn = sf.query(ValidWorkMachine.sn) \
+            .filter(ValidWorkMachine.id == Utils.parse_int(self.param("machine_id"))).limit(1).scalar()
+        peoples = sf.query(ValidWorkFingerTemplate.archives_id, Archives.name,
+                           ValidWorkFingerTemplate.finger_index, ValidWorkFingerTemplate.tpl)\
+            .join((Archives, ValidWorkFingerTemplate.archives)).all()
+        print(peoples)
+        finger_tpl_list = list()
+        for p in peoples:
+            finger_tpl_list.append(p)
+        ValidWorkHelper.push_users_fp_to_machine(sn, finger_tpl_list)
+        return ["success"]
 
 #指纹登记
 @api("tinyms.validwork.finger.template")

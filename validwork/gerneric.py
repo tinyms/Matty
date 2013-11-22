@@ -23,8 +23,10 @@ class ValidWorkHelper():
     @staticmethod
     def push_command_to_machine(sn, cmd):
         sf = SessionFactory.new()
+        id_ = sf.query(ValidWorkCommands.id).filter(ValidWorkCommands.sn == sn).limit(1).scalar()
         vwc = ValidWorkCommands()
         vwc.sn = sn
+        vwc.validworkmachine_id = id_
         vwc.cmd = cmd
         vwc.create_date = Utils.current_datetime()
         sf.add(vwc)
@@ -35,12 +37,15 @@ class ValidWorkHelper():
         create = r"DATA DEL_USER PIN=%i\r\nDATA USER PIN=%i\tName=%s\r\n" % (pin, pin, name)
         update = r"DATA FP PIN=%i\tFID=%i\tTMP=%s\r\n" % (pin, fid, tpl)
         sf = SessionFactory.new()
+        id_ = sf.query(ValidWorkCommands.id).filter(ValidWorkCommands.sn == sn).limit(1).scalar()
         vwc = ValidWorkCommands()
         vwc.sn = sn
+        vwc.validworkmachine_id = id_
         vwc.cmd = create
         vwc.create_date = Utils.current_datetime()
         vwc1 = ValidWorkCommands()
         vwc1.sn = sn
+        vwc1.validworkmachine_id = id_
         vwc1.cmd = update
         vwc1.create_date = Utils.current_datetime()
         sf.add_all([vwc, vwc1])
@@ -51,19 +56,22 @@ class ValidWorkHelper():
         """
 
         @param sn:
-        @param items: [(pin, name, fid, tpl)..]
+        @param items: [[pin, name, fid, tpl]..]
         """
         sf = SessionFactory.new()
+        id_ = sf.query(ValidWorkCommands.id).filter(ValidWorkCommands.sn == sn).limit(1).scalar()
         cmds = list()
         for item in items:
             create = r"DATA DEL_USER PIN=%i\r\nDATA USER PIN=%i\tName=%s\r\n" % (item[0], item[0], item[1])
             update = r"DATA FP PIN=%i\tFID=%i\tTMP=%s\r\n" % (item[0], item[2], item[3])
             vwc = ValidWorkCommands()
             vwc.sn = sn
+            vwc.validworkmachine_id = id_
             vwc.cmd = create
             vwc.create_date = Utils.current_datetime()
             vwc1 = ValidWorkCommands()
             vwc1.sn = sn
+            vwc1.validworkmachine_id = id_
             vwc1.cmd = update
             vwc1.create_date = Utils.current_datetime()
             cmds += [vwc, vwc1]
@@ -175,24 +183,21 @@ class ValidWorkPoints():
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.update", "考勤", "班次/时间段", "修改任务计划")
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.delete", "考勤", "班次/时间段", "删除任务计划")
         #指纹模版
-        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.list", "考勤", "指纹模版", "查看任务计划列表")
-        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.view", "考勤", "指纹模版", "添加任务计划明细")
-        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.add", "考勤", "指纹模版", "添加任务计划")
-        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.update", "考勤", "指纹模版", "修改任务计划")
-        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.delete", "考勤", "指纹模版", "删除任务计划")
+        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.list", "考勤", "指纹模版", "查看指纹模版列表")
+        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.view", "考勤", "指纹模版", "查看指纹模版明细")
+        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.add", "考勤", "指纹模版", "添加指纹模版")
+        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.update", "考勤", "指纹模版", "修改指纹模版")
+        reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.delete", "考勤", "指纹模版", "删除指纹模版")
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.edit", "考勤", "指纹模版", "指纹录入")
         #节日
-        reg_point("tinyms.validwork.entity.Holiday.list", "考勤", "节日", "查看任务计划列表")
-        reg_point("tinyms.validwork.entity.Holiday.view", "考勤", "节日", "添加任务计划明细")
-        reg_point("tinyms.validwork.entity.Holiday.add", "考勤", "节日", "添加任务计划")
-        reg_point("tinyms.validwork.entity.Holiday.update", "考勤", "节日", "修改任务计划")
-        reg_point("tinyms.validwork.entity.Holiday.delete", "考勤", "节日", "删除任务计划")
+        reg_point("tinyms.validwork.entity.Holiday.list", "考勤", "节日", "查看节日列表")
+        reg_point("tinyms.validwork.entity.Holiday.view", "考勤", "节日", "查看节日明细")
+        reg_point("tinyms.validwork.entity.Holiday.add", "考勤", "节日", "添加节日")
+        reg_point("tinyms.validwork.entity.Holiday.update", "考勤", "节日", "修改节日")
+        reg_point("tinyms.validwork.entity.Holiday.delete", "考勤", "节日", "删除节日")
         #考勤机管理
-        reg_point("tinyms.validwork.entity.ValidWorkMachine.list", "考勤", "考勤机管理", "查看任务计划")
-        #reg_point("tinyms.validwork.entity.ValidWorkMachine.view", "考勤", "考勤机管理", "查看任务计划")
-        #reg_point("tinyms.validwork.entity.ValidWorkMachine.add", "考勤", "考勤机管理", "添加任务计划")
-        reg_point("tinyms.validwork.entity.ValidWorkMachine.update", "考勤", "考勤机管理", "修改任务计划")
-        #reg_point("tinyms.validwork.entity.ValidWorkMachine.delete", "考勤", "考勤机管理", "删除任务计划")
+        reg_point("tinyms.validwork.entity.ValidWorkMachine.list", "考勤", "考勤机管理", "查看考勤机列表")
+        reg_point("tinyms.validwork.entity.ValidWorkMachine.update", "考勤", "考勤机管理", "修改考勤机")
 
 
         #启动任务分配管理器
