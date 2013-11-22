@@ -151,11 +151,6 @@ $(document).ready(function(){
     $("#schedule_task").hide();
     $("#finger_tpl_panel_menu").hide();
     {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
-    $("#finger_template_keygen").click(function(){
-        $.post("/api/tinyms.validwork.finger.template/kengen",{},function(data){
-            $("#finger_template_key").val(data[0]);
-        },"json");
-    });
     $("#finger_index_panel :radio").each(function(){
         $(this).click(function(){
             if(current_selected_user_id==0){
@@ -211,13 +206,8 @@ $(document).ready(function(){
         </div>
         <div class="col-lg-4">
             {% if auth({"tinyms.validwork.entity.ValidWorkFingerTemplate.edit"}) %}
-            <div class="alert alert-warning">生成的临时密钥供客户端录入指纹认证之用</div>
-            <div class="input-group">
-              <span class="input-group-addon">密钥</span>
-              <input class="form-control" id="finger_template_key"/>
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="button" id="finger_template_keygen">生成</button>
-              </span>
+            <div>
+                <a class="btn-link" href="/validwork/download/client"><i class="icon-download"></i>下载指纹采集助手</a>
             </div>
             <div class="panel" id="finger_tpl" style="margin-top: 10px;">
                 <div class="panel-heading">

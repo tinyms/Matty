@@ -2,6 +2,7 @@ __author__ = 'tinyms'
 
 from datetime import datetime, timedelta
 import threading
+
 from sqlalchemy import asc, func
 
 from tinyms.core.annotation import points, reg_point
@@ -77,9 +78,10 @@ class ValidWorkSchedulerThread(threading.Thread):
 
     def run(self):
         import time
+
         while True:
             ValidWorkSchedulerThread.organization_of_work()
-            time.sleep(60*5)
+            time.sleep(60 * 5)
 
     #线程后台定时运动，休眠5分钟
     @staticmethod
@@ -146,6 +148,7 @@ class ValidWorkSchedulerThread(threading.Thread):
                     pass
                 pass
         pass
+
 
 @points()
 class ValidWorkPoints():

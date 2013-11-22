@@ -55,7 +55,6 @@ void CFingerTemplateHelperDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_ZKFPENGX, m_CZKFPEngX);
-	DDX_Control(pDX, IDC_NETKEY_EDIT, m_netkey_editor);
 	DDX_Control(pDX, IDC_CNN_DEVICE_BTN, m_cnn_device_btn);
 	DDX_Control(pDX, IDC_PICK_BTN, m_pick_btn);
 }
@@ -68,7 +67,6 @@ BEGIN_MESSAGE_MAP(CFingerTemplateHelperDlg, CDialog)
 	ON_BN_CLICKED(IDC_CNN_DEVICE_BTN, &CFingerTemplateHelperDlg::OnBnClickedCnnDeviceBtn)
 	ON_BN_CLICKED(IDC_PICK_BTN, &CFingerTemplateHelperDlg::OnBnClickedPickBtn)
 	ON_WM_CLOSE()
-	ON_EN_CHANGE(IDC_NETKEY_EDIT, &CFingerTemplateHelperDlg::OnEnChangeNetkeyEdit)
 END_MESSAGE_MAP()
 
 
@@ -104,11 +102,6 @@ BOOL CFingerTemplateHelperDlg::OnInitDialog()
 	// TODO: 在此添加额外的初始化代码
 	this->m_device_cnn = FALSE;
 	this->m_pick_count = 0;
-	CString ukey = _T("");
-	if(Utils::FileExist(_T("temp.key"))){
-		Utils::TextRead(_T("temp.key"),ukey);
-		SetDlgItemText(IDC_NETKEY_EDIT,ukey);
-	}
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -222,7 +215,7 @@ void CFingerTemplateHelperDlg::OnEnrollZkfpengx(BOOL ActionResult, const VARIANT
 		CString ip = _T("");
 		Utils::TextRead(_T("ip.txt"),ip);
 		CString ukey;
-		GetDlgItemText(IDC_NETKEY_EDIT,ukey);
+		Utils::TextRead(_T("temp.key"),ukey);
 		CString postUrl = _T("");
 		postUrl.Format(_T("http://%s/api/tinyms.validwork.finger.template/sign?ukey=%s"),ip,ukey);
 		Utils::PostFingerTemplate(postUrl,sTmp);
@@ -244,7 +237,7 @@ void CFingerTemplateHelperDlg::OnImageReceivedZkfpengx(BOOL* AImageValid)
 	SetDlgItemText(IDC_TIP_STATIC,tip);
 	HDC hdc;
 	hdc = this->GetDC()->m_hDC;
-	this->m_CZKFPEngX.PrintImageAt(long(hdc), 20, 65, this->m_CZKFPEngX.get_ImageWidth()+70, this->m_CZKFPEngX.get_ImageHeight()-100);
+	this->m_CZKFPEngX.PrintImageAt(long(hdc), 20, 25, this->m_CZKFPEngX.get_ImageWidth()+70, this->m_CZKFPEngX.get_ImageHeight()-100);
 }
 
 void CFingerTemplateHelperDlg::OnClose()
@@ -253,14 +246,4 @@ void CFingerTemplateHelperDlg::OnClose()
 		this->m_CZKFPEngX.EndEngine();
 	}
 	CDialog::OnClose();
-}
-
-void CFingerTemplateHelperDlg::OnEnChangeNetkeyEdit()
-{
-	CString ukey;
-	GetDlgItemText(IDC_NETKEY_EDIT,ukey);
-	if(Utils::FileExist(_T("temp.key"))){
-		Utils::DelFile(_T("temp.key"));
-	}
-	Utils::TextWrite(_T("temp.key"),ukey);
 }

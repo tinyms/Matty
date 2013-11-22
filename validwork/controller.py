@@ -1,6 +1,8 @@
 __author__ = 'tinyms'
 
 import random
+import os
+from zipfile import ZipFile, ZIP_DEFLATED
 import uuid
 from datetime import datetime, timedelta
 
@@ -11,6 +13,7 @@ from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, aut
 from tinyms.core.orm import SessionFactory
 from tinyms.core.entity import Archives
 from tinyms.core.common import Utils
+from tinyms.dao.account import AccountHelper
 from validwork.entity import *
 
 
@@ -68,6 +71,69 @@ class MachineController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/machine.html")
 
+@route("/validwork/download/client")
+class DownloadFingerClient(IAuthRequest):
+    def get(self, *args, **kwargs):
+        file = self.pack_client()
+        self.set_header("Content-Disposition", "attachment; filename=指纹采集助手.zip")
+        f = open(file, "rb")
+        self.write(f.read())
+        f.close()
+
+    def pack_client(self):
+        user_id = self.get_current_user()
+        root_path = self.get_webroot_path()
+        download_path = root_path + "/download/validwork/"
+        Utils.mkdirs(download_path)
+
+        client_zip_name = download_path + Utils.md5("%i_client" % user_id) + ".zip"
+        key_file_name = download_path + Utils.md5("%i_keyfile" % user_id)
+        ip_file_name = download_path + "ip.txt"
+        exe_file_name = download_path + "FingerTemplateHelper.exe"
+        libcurl = download_path + "libcurl.dll"
+        zlib1 = download_path + "zlib1.dll"
+
+        if os.path.exists(key_file_name):
+            os.remove(key_file_name)
+        key = self.kengen()
+        Utils.text_write(key_file_name, [key], "")
+
+        if not os.path.exists(ip_file_name):
+            Utils.text_write(ip_file_name, [self.request.host], "")
+
+        if os.path.exists(client_zip_name):
+            os.remove(client_zip_name)
+        f = ZipFile(client_zip_name, "w")
+        self.compress(f, ip_file_name, "ip.txt")
+        self.compress(f, key_file_name, "temp.key")
+        self.compress(f, exe_file_name, "指纹采集助手.exe")
+        self.compress(f, libcurl, "libcurl.dll")
+        self.compress(f, zlib1, "zlib1.dll")
+        f.close()
+        return client_zip_name
+
+    def compress(self, zip_file, file_name, alias_name=""):
+        if os.path.exists(file_name):
+            zip_file.write(file_name, alias_name, ZIP_DEFLATED)
+
+    def kengen(self):
+        str_random = ['3', '4', '5', '6', '7', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
+        seed = "%i@%s" % (self.get_current_user(), random.choice(str_random))
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkFingerTemplateKey) \
+            .filter(ValidWorkFingerTemplateKey.account_id == self.get_current_user()).limit(1).scalar()
+        if obj:
+            obj.ukey = str(uuid.uuid3(uuid.NAMESPACE_DNS, seed))
+            sf.commit()
+            return obj.ukey
+        else:
+            ukey = ValidWorkFingerTemplateKey()
+            ukey.account_id = self.get_current_user()
+            ukey.tpl = ""
+            ukey.ukey = str(uuid.uuid3(uuid.NAMESPACE_DNS, seed))
+            sf.add(ukey)
+            sf.commit()
+            return ukey.ukey
 
 #DataProvider
 @datatable_provider("validwork.entity.ValidWorkTimeBlock")

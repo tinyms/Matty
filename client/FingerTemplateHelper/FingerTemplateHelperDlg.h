@@ -32,7 +32,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	CZKFPEngX m_CZKFPEngX;
-	CEdit m_netkey_editor;
 	CButton m_cnn_device_btn;
 	CButton m_pick_btn;
 public:
@@ -50,6 +49,4 @@ public:
 	void OnImageReceivedZkfpengx(BOOL* AImageValid);
 public:
 	afx_msg void OnClose();
-public:
-	afx_msg void OnEnChangeNetkeyEdit();
 };
