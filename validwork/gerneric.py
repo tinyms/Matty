@@ -3,7 +3,7 @@ __author__ = 'tinyms'
 from datetime import datetime, timedelta
 import threading
 
-from sqlalchemy import asc, func
+from sqlalchemy import func
 
 from tinyms.core.annotation import points, reg_point
 from tinyms.core.common import Utils
@@ -107,54 +107,55 @@ class ValidWorkSchedulerThread(threading.Thread):
         tasks = sf.query(ValidWorkScheduleTask.id).all()
         tasks = [task[0] for task in tasks]
         for task_id in tasks:
-            #得到班次最小的时间点
-            min_time = sf.query(ValidWorkTimeBlock.start_time) \
-                .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
-                .order_by(asc(ValidWorkTimeBlock.start_time)) \
-                .filter(ValidWorkScheduleTask.id == task_id).limit(1).scalar()
-            if min_time:
-                #提前30分钟安排下一档工作
-                min_datetime = datetime.combine(current_datetime.date(), min_time)
-                start_datetime = min_datetime - timedelta(minutes=30)
-                if start_datetime <= current_datetime <= min_datetime:
-                    #当天是否已经安排完成
-                    e = sf.query(func.count(ValidWorkCheckOn.id)) \
-                        .filter(ValidWorkCheckOn.task_id == task_id) \
-                        .filter(ValidWorkCheckOn.valid_start_time.date() == current_datetime.date()).scalar()
+        #得到班次最小的时间点
+        #min_time = sf.query(ValidWorkTimeBlock.start_time) \
+        #    .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
+        #    .order_by(asc(ValidWorkTimeBlock.start_time)) \
+        #    .filter(ValidWorkScheduleTask.id == task_id).limit(1).scalar()
+        #if min_time:
+        #    #提前30分钟安排下一档工作
+        #    min_datetime = datetime.combine(current_datetime.date(), min_time)
+        #    start_datetime = min_datetime - timedelta(minutes=30)
+        #    if start_datetime <= current_datetime <= min_datetime:
+            #当天是否已经安排完成
+            e = sf.query(func.count(ValidWorkCheckOn.id)) \
+                .filter(ValidWorkCheckOn.task_id == task_id) \
+                .filter(func.DATE(ValidWorkCheckOn.valid_start_time) == current_datetime.date()).scalar()
 
-                    if e == 0:
-                        #安排新的工作
-                        #1,得到拥有此考勤计划的所有人员ID
-                        usrs = sf.query(Archives.id).join(ValidWorkScheduleTask, Archives.validworkscheduletasks) \
-                            .filter(ValidWorkScheduleTask.id == task_id).all()
+            if e == 0:
+                #安排新的工作
+                #1,得到拥有此考勤计划的所有人员ID
+                usrs = sf.query(Archives.id).join(ValidWorkScheduleTask, Archives.validworkscheduletasks) \
+                    .filter(ValidWorkScheduleTask.id == task_id).all()
+                usrs = [u[0] for u in usrs]
+                #2,得到此考勤计划的所有班次
+                time_blocks = sf.query(ValidWorkTimeBlock) \
+                    .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
+                    .filter(ValidWorkScheduleTask.id == task_id).all()
 
-                        #2,得到此考勤计划的所有班次
-                        time_blocks = sf.query(ValidWorkTimeBlock) \
-                            .join(ValidWorkScheduleTask, ValidWorkTimeBlock.validworkscheduletasks) \
-                            .filter(ValidWorkScheduleTask.id == task_id).all()
-
-                        #3,批量插入CheckOn
-                        workers_tb = list()
-                        for usr_id in usrs:
-                            for tb in time_blocks:
-                                vwco = ValidWorkCheckOn()
-                                vwco.archives_id = usr_id
-                                vwco.task_id = task_id
-                                vwco.time_block_id = tb.id
-                                start = datetime.combine(current_datetime.date(), tb.start_time)
-                                end = datetime.combine(current_datetime.date(), tb.end_time)
-                                start = start - timedelta(minutes=tb.normal_in_space)
-                                end = end + timedelta(minutes=tb.normal_out_space)
-                                vwco.valid_start_time = start
-                                vwco.valid_end_time = end
-                                workers_tb.append(vwco)
-                                pass
-                            pass
+                #3,批量插入CheckOn
+                workers_tb = list()
+                for usr_id in usrs:
+                    for tb in time_blocks:
+                        vwco = ValidWorkCheckOn()
+                        vwco.archives_id = usr_id
+                        vwco.task_id = task_id
+                        vwco.time_block_id = tb.id
+                        start = datetime.combine(current_datetime.date(), tb.start_time)
+                        end = datetime.combine(current_datetime.date(), tb.end_time)
+                        start = start - timedelta(minutes=tb.normal_in_space)
+                        end = end + timedelta(minutes=tb.normal_out_space)
+                        vwco.valid_start_time = start
+                        vwco.valid_end_time = end
+                        workers_tb.append(vwco)
                         pass
-                        sf.add_all(workers_tb)
-                        sf.commit()
                     pass
                 pass
+                print(workers_tb)
+                sf.add_all(workers_tb)
+                sf.commit()
+            pass
+        pass
         pass
 
 
