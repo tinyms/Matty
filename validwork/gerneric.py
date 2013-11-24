@@ -3,7 +3,7 @@ __author__ = 'tinyms'
 from datetime import datetime, timedelta
 import threading
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from tinyms.core.annotation import points, reg_point
 from tinyms.core.common import Utils
@@ -98,10 +98,10 @@ class ValidWorkSchedulerThread(threading.Thread):
         sf = SessionFactory.new()
         #标识-1的状态为旷工，这种情况是没有按指纹的，CheckOn 有效时间段结束时间已经过期的时候
         updates = sf.query(ValidWorkCheckOn) \
-            .filter(ValidWorkCheckOn.status == -1) \
+            .filter(or_(ValidWorkCheckOn.status_in == -1, ValidWorkCheckOn.status_out == -1)) \
             .filter(ValidWorkCheckOn.valid_end_time < current_datetime).all()
         for row in updates:
-            row.status = 0
+            row.status_no_sign = 1
         sf.commit()
         #列出所有考勤计划
         tasks = sf.query(ValidWorkScheduleTask.id).all()
@@ -151,7 +151,6 @@ class ValidWorkSchedulerThread(threading.Thread):
                         pass
                     pass
                 pass
-                print(workers_tb)
                 sf.add_all(workers_tb)
                 sf.commit()
             pass

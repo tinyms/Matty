@@ -71,6 +71,20 @@ class MachineController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/machine.html")
 
+#明细报表
+@sidebar("/validwork/report", "/validwork/report/details", "报表", "tinyms.sidebar.validwork.sub.machine.show")
+@sidebar("/validwork/report/details", "/validwork/report/details", "考勤日报表", "tinyms.sidebar.validwork.sub.machine.show")
+@route("/validwork/report/details")
+class DetailsReport(IAuthRequest):
+    def get(self, *args, **kwargs):
+        pass
+
+#分组汇总
+@sidebar("/validwork/report", "/validwork/report/groupby", "分组汇总", "tinyms.sidebar.validwork.sub.machine.show")
+@route("/validwork/report/groupby")
+class GroupByReport(IAuthRequest):
+    def get(self, *args, **kwargs):
+        pass
 
 @route("/validwork/download/client")
 class DownloadFingerClient(IAuthRequest):
@@ -466,29 +480,27 @@ class IClockCData(IRequest):
                 #正常上班打卡的开始时间(上班时间-正常上班打卡区间)
                 touchin_starttime = work_start_time - timedelta(minutes=timeblock.normal_in_space)
                 if touchin_starttime <= touch_time < work_start_time:
-                    status = 1
+                    obj.check_in_time = touch_time
+                    obj.status_in = 0
                 else:
                     #视为迟到的结束时间(上班时间+视为迟到打卡区间)
                     late_endtime = work_start_time + timedelta(minutes=timeblock.late_space)
                     if work_start_time <= touch_time <= late_endtime:
-                        status = 3
+                        obj.status_in = 1
+                        obj.check_in_time = touch_time
                     else:
                         #正常下班打卡的结束时间(下班时间+视为正常打卡区间)
                         touchout_endtime = normal_out_time + timedelta(minutes=timeblock.normal_out_space)
                         if normal_out_time < touch_time <= touchout_endtime:
-                            status = 2
+                            obj.status_out = 0
+                            obj.check_out_time = touch_time
                         else:
                             #视为早退的打卡开始时间(下班时间-视为早退打卡区间)
                             early_leave_starttime = normal_out_time - timedelta(minutes=timeblock.leave_early_space)
                             if early_leave_starttime <= touch_time <= normal_out_time:
-                                status = 4
-                            else:
-                                #视为旷工
-                                status = 0
+                                obj.status_out = 1
+                                obj.check_out_time = touch_time
                 pass
-                #更新CheckOn用户状态
-                obj.check_time = touch_time
-                obj.status = status
                 sf.commit()
 
 
