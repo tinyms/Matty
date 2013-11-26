@@ -1,7 +1,8 @@
 __author__ = 'tinyms'
 
-from sqlalchemy import Column, Integer, String, DateTime, Text, Date, Numeric
+from sqlalchemy import join, Column, Integer, String, DateTime, Text, Date, Numeric
 from tinyms.core.orm import Entity, Simplify, many_to_one, many_to_many
+from sqlalchemy.orm import column_property
 
 
 #人员档案
@@ -169,6 +170,22 @@ class TermTaxonomy(Entity, Simplify):
     description = Column(Text)
     #parent
     #term
+
+term_taxonomy_view = join(TermTaxonomy, Term)
+
+
+class CategoryView(Entity):
+    __table__ = term_taxonomy_view
+
+    id = column_property(TermTaxonomy.id, Term.id)
+    tt_id = TermTaxonomy.id
+    term_id = Term.id
+    name = Term.name
+    taxonomy = TermTaxonomy.taxonomy
+    path = TermTaxonomy.path
+    object_count = TermTaxonomy.object_count
+    description = TermTaxonomy.description
+    parent_id = TermTaxonomy.parent_id
 
 
 class Setting(Entity, Simplify):

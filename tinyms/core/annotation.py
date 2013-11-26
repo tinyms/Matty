@@ -6,7 +6,7 @@ from tinyms.core.common import Utils
 
 
 #for plugin to extends
-class EmptyClass():
+class EmptyClass(object):
     pass
 
 

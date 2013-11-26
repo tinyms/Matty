@@ -1,0 +1,36 @@
+{% extends "../workbench/master.html" %}
+{% block title %}考勤月报表{% end %}
+{% block header %}
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-bar-chart"></i>报表</h4>
+        <div class="block">
+            <div class="btn-group">
+                <button class="btn btn-white btn-sm dropdown-toggle" data-toggle="dropdown">考勤月报表 <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li><a href="/validwork/report/day_details"><i class="icon-file-text"></i> 考勤日报表</a></li>
+                    <li><a href="/validwork/report/month_groupby"><i class="icon-file-text"></i> 考勤月报表</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel">
+                <div class="panel-heading">考勤月报表</div>
+                <div class="panel-body">
+                    {% module DataView(id="ValidWorkDayReportDataView",
+                    view="validwork.view.report.DayReportView",
+                    cols=['no','name','timeblock','start_time','end_time','late','early_leave','nowork','sign_in','sign_out','department'],
+                    titles=['工号','姓名','班次','上班时间','下班时间','迟到','早退','旷工|时','签到','签退','部门'],
+                    search_tip = "可搜索姓名",
+                    point_list = "tinyms.entity.archives.list"
+                    ) %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% end %}

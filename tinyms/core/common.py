@@ -168,8 +168,13 @@ class JsonEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
             return float(o)
-        elif isinstance(o, datetime.date) or isinstance(o, datetime.datetime) or isinstance(o, datetime.time):
-            return o.isoformat()
+        elif isinstance(o, datetime.date):
+            return Utils.format_datetime_short(o)
+        elif isinstance(o, datetime.datetime):
+            return Utils.format_datetime_short(o)
+        elif isinstance(o, datetime.time):
+            return Utils.format_time(o)
+
         super(JsonEncoder, self).default(o)
 
 
@@ -398,6 +403,18 @@ class Utils():
         if not date_obj:
             return ""
         return date_obj.strftime('%Y-%m-%d')
+
+    @staticmethod
+    def format_time(datetime_obj):
+        if not datetime_obj:
+            return ""
+        if isinstance(datetime_obj, datetime.time):
+            curr_date = Utils.current_datetime()
+            dt = datetime.datetime.combine(curr_date, datetime_obj)
+            return dt.strftime('%H:%M')
+        elif isinstance(datetime_obj, datetime.datetime):
+            return datetime_obj.strftime('%H:%M')
+        return ""
 
 
 class Plugin():

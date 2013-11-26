@@ -1,8 +1,9 @@
 __author__ = 'tinyms'
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Time
+from sqlalchemy import outerjoin, join, Column, Integer, String, Text, DateTime, Date, Time
 from tinyms.core.orm import Simplify, Entity, many_to_one, many_to_many
-
+from tinyms.core.entity import CategoryView, Archives
+from sqlalchemy.orm import column_property
 
 #考勤机管理
 class ValidWorkMachine(Entity, Simplify):
@@ -97,3 +98,34 @@ class ValidWorkCheckOn(Entity, Simplify):
     time_block_id = Column(Integer(), nullable=False)
     task_id = Column(Integer(), nullable=False)
     #archives
+
+ValidWork_CheckOn_TimeBlock_View = join(ValidWorkCheckOn, ValidWorkTimeBlock,
+                                        ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)
+ValidWork_CheckOn_Archives_View = join(ValidWorkCheckOn, Archives, ValidWorkCheckOn.archives_id == Archives.id)
+
+
+#视图区
+#打卡登记日报表视图
+class ValidWorkCheckOnTimeBlockView(Entity):
+    __table__ = ValidWork_CheckOn_TimeBlock_View
+    id = column_property(ValidWorkTimeBlock.id, ValidWorkCheckOn.id)
+    checkon_id = ValidWorkCheckOn.id
+    check_in_time = ValidWorkCheckOn.check_in_time
+    check_out_time = ValidWorkCheckOn.check_out_time
+    status_no_sign = ValidWorkCheckOn.status_no_sign
+    status_in = ValidWorkCheckOn.status_in
+    status_out = ValidWorkCheckOn.status_out
+    valid_start_time = ValidWorkCheckOn.valid_start_time
+    valid_end_time = ValidWorkCheckOn.valid_end_time
+    tb_name = ValidWorkTimeBlock.name
+    tb_start_time = ValidWorkTimeBlock.start_time
+    tb_end_time = ValidWorkTimeBlock.end_time
+
+
+class ValidWorkCheckOnArchivesView(Entity):
+    __table__ = ValidWork_CheckOn_Archives_View
+    id = column_property(ValidWorkCheckOn.id, Archives.id)
+    checkon_id = ValidWorkCheckOn.id
+    archives_id = Archives.id
+    name = Archives.name
+    org_id = Archives.org_id

@@ -2,6 +2,7 @@ __author__ = 'tinyms'
 
 import random
 import os
+import json
 from zipfile import ZipFile, ZIP_DEFLATED
 import uuid
 from datetime import datetime, timedelta
@@ -9,15 +10,15 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, asc
 
 from tinyms.core.web import IAuthRequest, IRequest
-from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api
+from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api, EmptyClass
 from tinyms.core.orm import SessionFactory
-from tinyms.core.entity import Archives
 from tinyms.core.common import Utils
+from tinyms.core.entity import Term, TermTaxonomy
 from validwork.gerneric import ValidWorkHelper
 from validwork.entity import *
 
 
-@sidebar("/validwork", "/validwork/schedule/task", "考勤系统", "tinyms.sidebar.validwork.main.show")
+@sidebar("/validwork", "/validwork/schedule/task", "考勤系统", "tinyms.sidebar.validwork.main.show", 0, "icon-calendar")
 @sidebar("/validwork/schedule_task", "/validwork/schedule/task", "任务计划",
          "tinyms.sidebar.validwork.sub.scheduletask.show")
 @route("/validwork/schedule/task")
@@ -71,20 +72,78 @@ class MachineController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/machine.html")
 
-#明细报表
-@sidebar("/validwork/report", "/validwork/report/details", "报表", "tinyms.sidebar.validwork.sub.machine.show")
-@sidebar("/validwork/report/details", "/validwork/report/details", "考勤日报表", "tinyms.sidebar.validwork.sub.machine.show")
-@route("/validwork/report/details")
-class DetailsReport(IAuthRequest):
+#日明细报表
+@sidebar("/validwork/report", "/validwork/report/day_details", "报表", "tinyms.sidebar.validwork.sub.machine.show")
+@route("/validwork/report/day_details")
+class DayDetailsReport(IAuthRequest):
     def get(self, *args, **kwargs):
-        pass
+        return self.render("validwork/report_day_details.html")
 
-#分组汇总
-@sidebar("/validwork/report", "/validwork/report/groupby", "分组汇总", "tinyms.sidebar.validwork.sub.machine.show")
-@route("/validwork/report/groupby")
-class GroupByReport(IAuthRequest):
+
+@dataview_provider("validwork.view.report.DayReportView")
+class DayDetailsReportDataProvider():
+    def count(self, search_text, http_req):
+        current_date = None
+        sf = SessionFactory.new()
+        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
+        q = sf.query(func.count(ValidWorkCheckOn.id))\
+            .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .outerjoin(subq, subq.c.id == Archives.org_id)
+        if search_text:
+            q = q.filter(Archives.name.like('%'+search_text+'%'))
+        if not current_date:
+            q = q.filter(func.DATE(ValidWorkCheckOn.valid_start_time) == Utils.current_datetime().date())
+        return q.scalar()
+
+    def list(self, search_text, start, limit, http_req):
+        current_date = None
+        sf = SessionFactory.new()
+        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
+        q = sf.query(ValidWorkCheckOn.id,
+                     Archives.code,
+                     Archives.name,
+                     ValidWorkTimeBlock.name,
+                     ValidWorkTimeBlock.start_time,
+                     ValidWorkTimeBlock.end_time,
+                     ValidWorkCheckOn.status_in,
+                     ValidWorkCheckOn.status_out,
+                     ValidWorkCheckOn.status_no_sign,
+                     ValidWorkCheckOn.check_in_time,
+                     ValidWorkCheckOn.check_out_time,
+                     subq.c.term_name).select_from(ValidWorkCheckOn)\
+            .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .outerjoin(subq, subq.c.id == Archives.org_id)
+        if search_text:
+            q = q.filter(Archives.name.like('%'+search_text+'%'))
+        if not current_date:
+            q = q.filter(func.DATE(ValidWorkCheckOn.valid_start_time) == Utils.current_datetime().date())
+        ds = q.offset(start).limit(limit).all()
+        items = list()
+        for row in ds:
+            obj = EmptyClass()
+            obj.id = row[0]
+            obj.code = row[1]
+            obj.name = row[2]
+            obj.tb_name = row[3]
+            obj.start_time = Utils.format_time(row[4])
+            obj.end_time = Utils.format_time(row[5])
+            obj.status_in = row[6]
+            obj.status_out = row[7]
+            obj.status_no_sign = row[8]
+            obj.check_in_time = Utils.format_time(row[9])
+            obj.check_out_time = Utils.format_time(row[10])
+            obj.org_name = row[11]
+            items.append(obj.__dict__)
+        return items
+
+#月分组汇总
+@route("/validwork/report/month_groupby")
+class MonthGroupByReport(IAuthRequest):
     def get(self, *args, **kwargs):
-        pass
+        return self.render("validwork/report_month_details.html")
+
 
 @route("/validwork/download/client")
 class DownloadFingerClient(IAuthRequest):
@@ -319,7 +378,7 @@ class FingerAndTaskAssign():
         sn = sf.query(ValidWorkMachine.sn) \
             .filter(ValidWorkMachine.id == Utils.parse_int(self.param("machine_id"))).limit(1).scalar()
         peoples = sf.query(ValidWorkFingerTemplate.archives_id, Archives.name,
-                           ValidWorkFingerTemplate.finger_index, ValidWorkFingerTemplate.tpl)\
+                           ValidWorkFingerTemplate.finger_index, ValidWorkFingerTemplate.tpl) \
             .join((Archives, ValidWorkFingerTemplate.archives)).all()
         print(peoples)
         finger_tpl_list = list()
