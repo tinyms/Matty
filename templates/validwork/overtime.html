@@ -14,44 +14,41 @@
             <div class="panel">
                 <div class="panel-heading">加班列表</div>
                 <div class="panel-body">
-                    {% module DataTable(id="HolidayDataTable",
-                                        entity="validwork.entity.Holiday",
-                                        cols=['name','start_date','end_date'],
-                                        titles=['名称','开始日期','结束日期'],
-                                        autoform=False,
-                                        search_fields = ["name"],
-                                        search_tip = "可搜索节日名称",
-                                        point_list = "tinyms.validwork.entity.Holiday.list",
-                                        point_view = "tinyms.validwork.entity.Holiday.view",
-                                        point_add = "tinyms.validwork.entity.Holiday.add",
-                                        point_update = "tinyms.validwork.entity.Holiday.update",
-                                        point_delete = "tinyms.validwork.entity.Holiday.delete"
+                    {% module DataView(id="OvertimeDataView",
+                                        view="validwork.view.Overtime",
+                                        cols=['name','start_datetime','end_datetime','creator','create_datetime'],
+                                        titles=['姓名','开始时间','结束时间','经手人','登记时间'],
+                                        autoform=True,
+                                        search_tip = "可搜索请假人姓名",
+                                        point_list = "tinyms.validwork.entity.Overtime.list",
+                                        point_view = "tinyms.validwork.entity.Overtime.view",
+                                        point_add = "tinyms.validwork.entity.Overtime.add",
+                                        point_update = "tinyms.validwork.entity.Overtime.update",
+                                        point_delete = "tinyms.validwork.entity.Overtime.delete"
                                         ) %}
-                    {% module panel_start("HolidayDataTable") %}
-                    {% module datagrid_form_start("HolidayDataTable") %}
-
+                    {% module panel_start("OvertimeDataView") %}
+                    {% module datagrid_form_start("OvertimeDataView") %}
                     <div class="form-group">
-                    <label for="name" class="col-lg-3 control-label">名称</label>
+                    <label for="name" class="col-lg-3 control-label">加班人</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control" id="name" name="name" required >
-                    </div>
-                    </div>
-
-                    <div class="form-group">
-                    <label for="start_date" class="col-lg-3 control-label">开始日期</label>
-                    <div class="col-lg-8">
-                    <input type="text" class="form-control date" id="start_date" name="start_date" required>
+                    <input type="text" class="form-control" id="name" name="name">
                     </div>
                     </div>
 
                     <div class="form-group">
-                    <label for="end_date" class="col-lg-3 control-label">结束日期</label>
+                    <label for="start_datetime" class="col-lg-3 control-label">开始时间</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control date" id="end_date" name="end_date" required>
+                    <input type="text" class="form-control" id="start_datetime" name="start_datetime" required>
                     </div>
                     </div>
 
-                    {% module datagrid_form_end("HolidayDataTable","validwork.entity.Holiday") %}
+                    <div class="form-group">
+                    <label for="end_datetime" class="col-lg-3 control-label">结束时间</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control" id="end_datetime" name="end_datetime" required>
+                    </div>
+                    </div>
+                    {% module datagrid_form_end("OvertimeDataView","validwork.view.Overtime","view") %}
                     {% module panel_end() %}
                 </div>
             </div>

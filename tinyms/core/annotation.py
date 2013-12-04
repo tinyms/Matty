@@ -212,7 +212,9 @@ def datatable_provider(entity_name):
     def total(query,req) -> return query
     def dataset(query,req) -> return query
 
-    def before_add(entity_obj,sf,req) 保存之前作一些校验动作,返回提示信息,entity_obj已经填充了表单传过来的数据
+    保存之前作一些校验动作,返回提示信息,如果提示信息为空字符串表示验证通过,entity_obj已经填充了表单传过来的数据
+    def before_add(entity_obj,sf,req)
+
     def after_add(entity_obj,sf,req) ->return last inserted id,entity_obj已经填充了表单传过来的数据
 
     def before_modify(entity_obj,sf,req) 修改之前作一些校验动作,返回提示信息

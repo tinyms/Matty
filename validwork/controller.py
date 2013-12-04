@@ -98,6 +98,42 @@ class DayDetailsReportController(IAuthRequest):
         return self.render("validwork/report_day_details.html")
 
 
+@dataview_provider("validwork.view.Overtime")
+class OvertimeDataViewProvider():
+    def count(self, kw, http_req):
+        sf = SessionFactory.new()
+        q = sf.query(func.count(ValidWorkOvertime.id))\
+            .join(Archives, ValidWorkOvertime.archives_id == Archives.id)
+        if kw:
+            q = q.filter(Archives.name.contains(kw))
+        return q.limit(1).scalar()
+
+    def list(self, kw, start, limit, http_req):
+        sf = SessionFactory.new()
+        subq = sf.query(Archives.id, Archives.name).subquery()
+        q = sf.query(ValidWorkOvertime, Archives.name, subq.c.name.label("creator"))\
+            .join(Archives, ValidWorkOvertime.archives_id == Archives.id)\
+            .outerjoin(subq, ValidWorkOvertime.creator == subq.c.id)
+        if kw:
+            q = q.filter(Archives.name.contains(kw))
+        dataset = q.order_by(ValidWorkOvertime.id.desc()).offset(start).limit(limit).all()
+        items = list()
+        for row in dataset:
+            ot = row[0]
+            name = row[1]
+            creator = row[2]
+            item = dict()
+            item["start_datetime"] = Utils.format_datetime_short(ot.start_datetime)
+            item["end_datetime"] = Utils.format_datetime_short(ot.end_datetime)
+            item["create_datetime"] = Utils.format_datetime_short(ot.create_datetime)
+            item["name"] = name
+            item["creator"] = creator
+            items.append(item)
+        return items
+
+    def view(self, id_, http_req):
+        pass
+
 @dataview_provider("validwork.view.report.DayReportView")
 class DayDetailsReportDataProvider():
     def count(self, search_text, http_req):
