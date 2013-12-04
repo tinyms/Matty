@@ -232,8 +232,10 @@ def datatable_provider(entity_name):
 def dataview_provider(view_name):
     """
     def count(default_search_val,http_req) -> return int
-    def list(default_search_val,start,limit, http_req) -> return [dict,dict..], start,limit: query.offset(display_start).limit(display_length)
+    def list(default_search_val,start,limit, http_req) -> return [dict,dict..],
+            start,limit: query.order_by(entity.id.desc()).offset(display_start).limit(display_length)
     def add(http_req) -> ->last inserted id
+    def view(id,http_req) -> return dict
     def modify(id,http_req) -> return err msg
     def delete(id,http_req) -> return err msg
     """

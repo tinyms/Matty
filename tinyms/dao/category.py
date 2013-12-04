@@ -72,13 +72,15 @@ class CategoryHelper():
             self.dph.add("tinyms.treeview.%s.%s" % (self.taxonomy, tt.id), name_)
         return tt.id
 
-    def remove(self, id):
+    def remove(self, id_):
         cnn = SessionFactory.new()
-        node = cnn.query(TermTaxonomy).filter(TermTaxonomy.id == id).filter(
+        node = cnn.query(TermTaxonomy).filter(TermTaxonomy.id == id_).filter(
             TermTaxonomy.term.has(Term.name != "ROOT")).limit(1).scalar()
-        cnn.delete(node)
+        path = node.path
+        cnn.query(TermTaxonomy).filter(TermTaxonomy.path.like(path+"%")).delete(synchronize_session="fetch")
         cnn.commit()
-        self.dph.delete("tinyms.treeview.%s.%s" % (self.taxonomy, id))
+        if self.taxonomy == "Org":
+            self.dph.delete("tinyms.treeview.%s.%s" % (self.taxonomy, id_))
         return "Success"
 
     def exists(self, name_):

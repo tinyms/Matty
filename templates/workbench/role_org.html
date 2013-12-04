@@ -53,8 +53,7 @@
         function assign_security_points(elem, role_id) {
             var row = RoleDataTable_.GetRow(role_id);
             $("#role_name_to_assign").text(row.name);
-            $("#RoleDataTable tr").removeAttr("style");
-            $(elem).parent().parent().attr("style", "background-color:#99CC99;");
+            RoleDataTable_.color_current_row(elem);
             $("#security_points_tab").data("RoleId", role_id);
             tinyms.controller.security.RoleSecurityPointsEdit.list({id: role_id}, function (b, data) {
                 $("#security_points_edit_panel :checkbox").each(function (i, elem) {
@@ -68,6 +67,7 @@
         {% end %}
 
         function show_user_roles(elem,account_id){
+            RoleDataTable_.color_current_row(elem);
             $("#current_select_user_id").val(account_id);
             var current_row = AccountDataTable_.GetRow(account_id);
             $("#current_select_user_name").html(current_row.name);

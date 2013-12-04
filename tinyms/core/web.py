@@ -1,7 +1,6 @@
 __author__ = 'tinyms'
 
 import json
-import os
 from tornado.web import RequestHandler
 from tinyms.core.common import JsonEncoder
 from tinyms.core.annotation import EmptyClass, ObjectPool, route
@@ -123,12 +122,6 @@ class IRequest(RequestHandler):
         for key in args:
             setattr(obj, key, self.get_argument(key))
         return obj
-
-    def get_webroot_path(self):
-        return os.path.dirname(self.get_template_path())
-
-    def get_static_path(self):
-        return os.path.dirname(self.get_template_path())+"/static"
 
 
 class IAuthRequest(IRequest):

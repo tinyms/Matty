@@ -61,9 +61,9 @@ class BPMWorklist(Entity, Simplify):
     #完成者 from Archives
     worker = Column(Integer())
 
-@many_to_one("BPMWorklist")
-@many_to_one("Archives")
-class BPMWorklistAuth(Entity, Simplify):
-    #是否允许编辑
-    editable = Column(Integer(), nullable=False)
+#@many_to_one("BPMWorklist")
+#@many_to_one("Archives")
+#class BPMWorklistAuth(Entity, Simplify):
+#    #是否允许编辑
+#    editable = Column(Integer(), nullable=False)
 

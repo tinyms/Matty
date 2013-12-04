@@ -78,10 +78,3 @@ class AccountHelper():
         cnn = SessionFactory.new()
         return cnn.query(Archives.name).join(Account) \
             .filter(Archives.id == Account.archives_id).filter(Account.id == account_id).limit(1).scalar()
-
-    @staticmethod
-    def archives_id(account_id=None):
-        if not account_id:
-            return None
-        cnn = SessionFactory.new()
-        return cnn.query(Account.archives_id).filter(Account.id == account_id).limit(1).scalar()

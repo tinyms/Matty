@@ -87,7 +87,7 @@ function DataTableX(id_, entityName_, cols_, actionbar_render_) {
                 "sInfoEmpty": "没有数据",
                 "sInfoFiltered": "(从 _MAX_ 条数据中检索)",
                 "sZeroRecords": "没有检索到数据",
-                "sSearch": "搜索:",
+                "sSearch": "快速搜索:",
                 "oPaginate": {
                     "sFirst": "首页",
                     "sPrevious": "前页",
@@ -176,7 +176,10 @@ function DataTableX(id_, entityName_, cols_, actionbar_render_) {
         });
         return values;
     }
-
+    this.color_current_row = function(btn){
+        $("#" + self.id + " tr").removeAttr("style");
+        $(btn).parent().parent().parent().attr("style", "background-color:#99CC99;");
+    }
     this.form = {
         "cancel": function (btn) {
             self.switchTableAndEditFormPanel(false);
@@ -233,38 +236,28 @@ function DataTableX(id_, entityName_, cols_, actionbar_render_) {
         "form_id": function () {
             return $('#' + this.id()).data("EditFormId");
         },
-        "color_current_row": function (btn) {
-            $("#" + this.id() + " tr").removeAttr("style");
-            $(btn).parent().parent().parent().attr("style", "background-color:#99CC99;");
-        },
         "New": function (btn) {
             self.switchTableAndEditFormPanel(true);
         },
         "Modify": function (btn, record_id) {
-            this.color_current_row(btn);
-            var local_ds = $('#' + this.id()).data("DataSet").aaData;
-            var current_row = null;
-            for (var k = 0; k < local_ds.length; k++) {
-                var row = local_ds[k];
-                if (row.id == record_id) {
-                    current_row = row;
+            self.color_current_row(btn);
+            $.post(self.request_url+"view",{id:record_id},function(data){
+                if(data.success){
+                    self.switchTableAndEditFormPanel(true);
+                    var current_row = data.msg;
+                    try {
+                        for (var k in current_row) {
+                            $("#" + self.id + "_form #" + k).val(current_row[k]);
+                        }
+                        if (typeof(datatable_form_fill) != "undefined") {
+                            datatable_form_fill(self.id, current_row);
+                        }
+                    } catch (e) {}
                 }
-            }
-            if (current_row != null) {
-                self.switchTableAndEditFormPanel(true);
-                try {
-                    for (k in current_row) {
-                        $("#" + self.id + "_form #" + k).val(current_row[k]);
-                    }
-                    if (typeof(datatable_form_fill) != "undefined") {
-                        datatable_form_fill(self.id, current_row);
-                    }
-                } catch (e) {
-                }
-            }
+            });
         },
         "Delete": function (btn, record_id) {
-            this.color_current_row(btn);
+            self.color_current_row(btn);
             var label = "确定要删除当前选中的记录吗?";
             if (typeof(datatable_data_delete_confirm_label) != "undefined") {
                 label = datatable_data_delete_confirm_label(self.id);

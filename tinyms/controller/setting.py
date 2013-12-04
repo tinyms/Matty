@@ -45,7 +45,7 @@ class SettingApi():
         for k in items.keys():
             obj = items[k].cls()
             if hasattr(obj, "save"):
-                msg = obj.save(kv, self)
+                msg = obj.save(kv, self.request)
                 if msg:
                     return msg
 
@@ -71,20 +71,21 @@ class SystemSetting():
         _usr_old_pwd = kv.get("_usr_old_pwd")
         _usr_new_pwd = kv.get("_usr_new_pwd")
         _usr_new_repwd = kv.get("_usr_new_repwd")
-        if _usr_new_pwd == _usr_new_repwd:
-            usr_id = http_req.current_user
-            sf = SessionFactory.new()
-            num = sf.query(func.count(Account.id)).filter(Account.id == usr_id) \
-                .filter(Account.login_pwd == Utils.md5(_usr_old_pwd)).scalar()
-            if num > 0:
-                a = sf.query(Account).get(usr_id)
-                a.login_pwd = Utils.md5(_usr_new_pwd)
-                sf.commit()
-                return ""
+        if _usr_old_pwd and _usr_new_pwd:
+            if _usr_new_pwd == _usr_new_repwd:
+                usr_id = http_req.current_user
+                sf = SessionFactory.new()
+                num = sf.query(func.count(Account.id)).filter(Account.id == usr_id) \
+                    .filter(Account.login_pwd == Utils.md5(_usr_old_pwd)).scalar()
+                if num > 0:
+                    a = sf.query(Account).get(usr_id)
+                    a.login_pwd = Utils.md5(_usr_new_pwd)
+                    sf.commit()
+                    return ""
+                else:
+                    return "PasswordError"
             else:
-                return "PasswordError"
-        else:
-            return "PasswordNotSame"
+                return "PasswordNotSame"
 
     def form_submit_javascript(self, req):
         pass

@@ -5,6 +5,7 @@
 <script type="text/javascript">
 	var current_selected_workschedule_id = 0;
     function ViewValidWorkScheduleTaskTimeBlocks(elem,v){
+        ValidWorkScheduleTaskDataTable_.color_current_row(elem);
 		var row = ValidWorkScheduleTaskDataTable_.GetRow(v);
 		$("#current_task_name").html("<font color='red'>"+row.name+" </font>");
 		current_selected_workschedule_id = v;
@@ -70,7 +71,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="panel">
-                <div class="panel-heading">任务计划列表</div>
+                <div class="panel-heading">考勤计划列表</div>
                 <div class="panel-body">
                     {% module DataTable(id="ValidWorkScheduleTaskDataTable",
                     entity="validwork.entity.ValidWorkScheduleTask",

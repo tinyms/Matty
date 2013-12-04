@@ -147,7 +147,7 @@ class Role(Entity, Simplify):
 #安全点
 @many_to_many("Role")
 class SecurityPoint(Entity, Simplify):
-    key_ = Column(String(500), unique=True, nullable=False)
+    key_ = Column(String(60), unique=True, nullable=False)
     description = Column(Text)
     group_ = Column(String(60), nullable=False)
     category = Column(String(60), nullable=False)
@@ -171,9 +171,11 @@ class TermTaxonomy(Entity, Simplify):
     #parent
     #term
 
+
 term_taxonomy_view = join(TermTaxonomy, Term)
 
 
+#分类视图
 class CategoryView(Entity):
     __table__ = term_taxonomy_view
 
@@ -181,6 +183,7 @@ class CategoryView(Entity):
     tt_id = TermTaxonomy.id
     term_id = Term.id
     name = Term.name
+    slug = Term.slug
     taxonomy = TermTaxonomy.taxonomy
     path = TermTaxonomy.path
     object_count = TermTaxonomy.object_count
@@ -188,6 +191,7 @@ class CategoryView(Entity):
     parent_id = TermTaxonomy.parent_id
 
 
+#全局设置
 class Setting(Entity, Simplify):
     #owner一个是固定的root,其它为平台使用用户的登录ID
     owner_ = Column(String(20), nullable=False, unique=True)

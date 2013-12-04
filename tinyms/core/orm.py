@@ -161,12 +161,14 @@ def many_to_one(foreign_entity_name):
         if foreign_entity_name == cls.__name__:
             foreign_entity_name_lower = "parent"
 
-        setattr(cls, '{0}_id'.format(foreign_entity_name_lower),
-                Column(Integer, ForeignKey('{0}.id'.format(foreign_table_name), ondelete="CASCADE")))
         if foreign_entity_name == cls.__name__:
+            setattr(cls, '{0}_id'.format(foreign_entity_name_lower),
+                    Column(Integer, ForeignKey('{0}.id'.format(foreign_table_name))))
             setattr(cls, foreign_entity_name_lower,
                     relationship(foreign_entity_name, backref=backref("children", remote_side=cls.id)))
         else:
+            setattr(cls, '{0}_id'.format(foreign_entity_name_lower),
+                    Column(Integer, ForeignKey('{0}.id'.format(foreign_table_name), ondelete="CASCADE")))
             setattr(cls, foreign_entity_name_lower,
                     relationship(foreign_entity_name, backref=backref(cls.__name__.lower() + 's')))
 

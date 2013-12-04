@@ -2,12 +2,11 @@ __author__ = 'tinyms'
 
 import random
 import os
-import json
 from zipfile import ZipFile, ZIP_DEFLATED
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, asc
+from sqlalchemy import func, asc, cast, Time
 
 from tinyms.core.web import IAuthRequest, IRequest
 from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api, EmptyClass
@@ -33,7 +32,11 @@ class ScheduleTaskController(IAuthRequest):
         sf = SessionFactory.new()
         rows = sf.query(ValidWorkTimeBlock.id, ValidWorkTimeBlock.name, ValidWorkTimeBlock.start_time,
                         ValidWorkTimeBlock.end_time).all()
-        return rows
+        items = list()
+        for row in rows:
+            items.append((row[0], row[1], Utils.format_time(row[2]), Utils.format_time(row[3])))
+
+        return items
 
 
 @sidebar("/validwork/timeblock", "/validwork/timeblock", "班次/时间段", "tinyms.sidebar.validwork.sub.timeblock.show")
@@ -83,6 +86,7 @@ class DayDetailsReport(IAuthRequest):
 @dataview_provider("validwork.view.report.DayReportView")
 class DayDetailsReportDataProvider():
     def count(self, search_text, http_req):
+        print(func)
         current_date = None
         sf = SessionFactory.new()
         subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
@@ -93,7 +97,7 @@ class DayDetailsReportDataProvider():
         if search_text:
             q = q.filter(Archives.name.like('%'+search_text+'%'))
         if not current_date:
-            q = q.filter(func.DATE(ValidWorkCheckOn.valid_start_time) == Utils.current_datetime().date())
+            q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.current_datetime().date())
         return q.scalar()
 
     def list(self, search_text, start, limit, http_req):
@@ -118,7 +122,7 @@ class DayDetailsReportDataProvider():
         if search_text:
             q = q.filter(Archives.name.like('%'+search_text+'%'))
         if not current_date:
-            q = q.filter(func.DATE(ValidWorkCheckOn.valid_start_time) == Utils.current_datetime().date())
+            q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.current_datetime().date())
         ds = q.offset(start).limit(limit).all()
         items = list()
         for row in ds:
@@ -217,8 +221,8 @@ class TimeBlockDataProvider():
         if num > 0:
             return "名称已经存在!"
         num = sf.query(func.count(ValidWorkTimeBlock.id)) \
-            .filter(ValidWorkTimeBlock.start_time == entity_obj.start_time) \
-            .filter(ValidWorkTimeBlock.end_time == entity_obj.end_time).scalar()
+            .filter(cast(ValidWorkTimeBlock.start_time, Time) == Utils.format_time(entity_obj.start_time)) \
+            .filter(cast(ValidWorkTimeBlock.end_time, Time) == Utils.format_time(entity_obj.end_time)).scalar()
         if num > 0:
             return "班次/时间段已经存在!"
         return ""
@@ -290,7 +294,7 @@ class ValidWorkArchivesDataView():
         if org_id:
             q = q.filter(Archives.org_id == org_id)
 
-        rows = q.offset(start).limit(limit).all()
+        rows = q.order_by(Archives.name).offset(start).limit(limit).all()
         items = list()
         for row in rows:
             item = dict()

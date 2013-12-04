@@ -103,15 +103,14 @@ class RoleOrg(IAuthRequest):
 
     def role_categories(self):
         cnn = SessionFactory.new()
-        items = cnn.query(SecurityPoint.category).group_by(SecurityPoint.category).order_by(
-            SecurityPoint.id.asc()).all()
+        items = cnn.query(SecurityPoint.category).group_by(SecurityPoint.category).all()
         categories = [(cat[0]) for cat in items]
         return categories
 
     def role_groups(self, c):
         cnn = SessionFactory.new()
         items = cnn.query(SecurityPoint.group_).filter(SecurityPoint.category == c). \
-            group_by(SecurityPoint.group_).order_by(SecurityPoint.id.asc()).all()
+            group_by(SecurityPoint.group_).all()
         groups = [item[0] for item in items]
         return groups
 
@@ -172,7 +171,7 @@ class AccountDataProvider():
             q = q.filter(or_(Account.login_name.like('%' + default_search_val + '%'),
                              Archives.name.like('%' + default_search_val + '%'),
                              Archives.email.like('%' + default_search_val + '%')))
-        ds = q.offset(start).limit(limit).all()
+        ds = q.order_by(Account.id.desc()).offset(start).limit(limit).all()
         items = list()
         for row in ds:
             item = dict()
@@ -203,7 +202,7 @@ class AccountDataProvider():
         account_id = AccountHelper.create(login_name, password, bind_target_user, enabled)
         return account_id
 
-    def modify(self, id, http_req):
+    def modify(self, id_, http_req):
         login_name = http_req.get_argument("login_name")
         if not login_name:
             return "UserLoginIdNotAllowedBlank"
@@ -215,13 +214,13 @@ class AccountDataProvider():
                 return "PasswordIsNotSame"
         bind_target_user = http_req.get_argument("archives_id")
         enabled = Utils.parse_int(http_req.get_argument("enabled"))
-        msg = AccountHelper.update(id, login_name, password, bind_target_user, enabled)
+        msg = AccountHelper.update(id_, login_name, password, bind_target_user, enabled)
         if msg == "Updated":
             return ""
         return msg
 
-    def delete(self, id, http_req):
-        msg = AccountHelper.delete(id)
+    def delete(self, id_, http_req):
+        msg = AccountHelper.delete(id_)
         if msg == "Success":
             return ""
         return msg

@@ -19,7 +19,9 @@ class IWidget(UIModule):
 @ui("Version")
 class VersionModule(IWidget):
     def render(self, *args, **kwargs):
-        return "&copy; ArchX 2013, v1.0b"
+        from datetime import datetime
+        year = datetime.now().strftime("%Y")
+        return "&copy; TinyMS, Power by ArchX %s, v1.0" % year
 
 
 @ui("CurrentAccountName")
@@ -175,7 +177,6 @@ class DataTableModule(DataTableBaseModule):
         self.entity_full_name = prop.get("entity")#entity name
         autoform = prop.get("autoform")
         checkable = prop.get("checkable")
-        toolbar_add = prop.get("toolbar_add")
         search_fields = prop.get("search_fields")#default search field name,and text type,
         search_tip = prop.get("search_tip")
         point = EmptyClass()
@@ -261,12 +262,20 @@ class DataTableModule(DataTableBaseModule):
 class DataTableHandler(IRequest):
     def post(self, id_, act):
         point = DataTableModule.__security_points__.get(id_)
+        print(point)
         message = dict()
         if act == "list":
             if not self.auth({point.list}):
                 self.write(dict())
             else:
                 self.list(id_)
+        elif act == "view":
+            if not self.auth({point.view}):
+                message["success"] = False
+                message["msg"] = "UnAuth"
+                self.write(json.dumps(message))
+            else:
+                self.view(id_)
         elif act == "save":
             if not self.auth({point.update}):
                 message["success"] = False
@@ -319,6 +328,31 @@ class DataTableHandler(IRequest):
             message["success"] = False
             message["msg"] = valid_msg
             self.write(json.dumps(message))
+
+    def view(self, id_):
+        message = dict()
+        message["success"] = False
+        self.set_header("Content-Type", "text/json;charset=utf-8")
+        meta = DataTableModule.__entity_mapping__.get(id_)
+        if not meta:
+            self.set_status(403, "Error!")
+        entity = import_object(meta["name"])
+        rec_id = self.get_argument("id")
+        if rec_id:
+            sf = SessionFactory.new()
+            item = sf.query(entity).get(rec_id)
+            if item:
+                message["success"] = True
+                message["msg"] = item.dict()
+                self.write(message)
+            else:
+                item = entity()
+                message["msg"] = item.dict()
+                self.write(message)
+        else:
+            item = entity()
+            message["msg"] = item.dict()
+            self.write(message)
 
     def update(self, id_):
         message = dict()
@@ -509,6 +543,13 @@ class DataViewHandler(IRequest):
                 self.write(dict())
             else:
                 self.list(id_)
+        elif act == "view":
+            if not self.auth({point.view}):
+                message["success"] = False
+                message["msg"] = "UnAuth"
+                self.write(json.dumps(message))
+            else:
+                self.view(id_)
         elif act == "save":
             if not self.auth({point.update}):
                 message["success"] = False
@@ -531,9 +572,28 @@ class DataViewHandler(IRequest):
             else:
                 self.delete(id_)
 
-    def delete(self, id):
+    def view(self, id_):
+        message = dict()
+        message["success"] = True
         self.set_header("Content-Type", "text/json;charset=utf-8")
-        name = DataViewModule.__view_mapping__.get(id)
+        name = DataTableModule.__entity_mapping__.get(id_)
+        if not name:
+            self.set_status(403, "Error!")
+        custom_filter = ObjectPool.dataview_provider.get(name)
+        rec_id = self.get_argument("id")
+        if custom_filter:
+            custom_filter_obj = custom_filter()
+            if hasattr(custom_filter_obj, "view"):
+                dict_item = custom_filter_obj.view(rec_id, self)
+                message["msg"] = dict_item
+                self.write(json.dumps(message))
+        else:
+            message["msg"] = dict()
+            self.write(message)
+
+    def delete(self, id_):
+        self.set_header("Content-Type", "text/json;charset=utf-8")
+        name = DataViewModule.__view_mapping__.get(id_)
         if not name:
             self.set_status(403, "Error!")
         message = dict()
