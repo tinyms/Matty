@@ -48,6 +48,40 @@ class Holiday(Entity, Simplify):
     end_date = Column(Date(), nullable=False)
 
 
+#请假记录
+class ValidWorkAskForLeave(Entity, Simplify):
+    #请假开始时间
+    start_datetime = Column(DateTime(), nullable=False)
+    #请假结束时间
+    end_datetime = Column(DateTime(), nullable=False)
+    #请假原因
+    reason = Column(Text(), nullable=False)
+    #请假日期
+    ask_date = Column(Date(), nullable=False)
+    #请假种类 (1:事假, 2:病假, 3:其他假 )
+    kind = Column(Integer(), nullable=False)
+    #请假人员
+    archives_id = Column(Integer(), nullable=False)
+    #创建时间
+    create_datetime = Column(DateTime(), nullable=False)
+    #经手人
+    creator = Column(Integer(), nullable=False)
+
+
+#加班记录
+class ValidWorkOvertime(Entity, Simplify):
+    #加班开始时间
+    start_datetime = Column(DateTime(), nullable=False)
+    #加班结束时间
+    end_datetime = Column(DateTime(), nullable=False)
+    #加班人员
+    archives_id = Column(Integer(), nullable=False)
+    #创建时间
+    create_datetime = Column(DateTime(), nullable=False)
+    #经手人
+    creator = Column(Integer(), nullable=False)
+
+
 #班次/时间段,几点~几点
 class ValidWorkTimeBlock(Entity, Simplify):
     name = Column(String(30), nullable=False, unique=True)

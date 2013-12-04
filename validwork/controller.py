@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, asc, cast, Time
+from sqlalchemy import func, asc, cast
 
 from tinyms.core.web import IAuthRequest, IRequest
 from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api, EmptyClass
@@ -16,6 +16,21 @@ from tinyms.core.entity import Term, TermTaxonomy
 from validwork.gerneric import ValidWorkHelper
 from validwork.entity import *
 
+
+@sidebar("/validwork/askforleave", "/validwork/askforleave", "请假登记",
+         "tinyms.sidebar.validwork.sub.askforleave.show")
+@route("/validwork/askforleave")
+class AskForLeaveController(IAuthRequest):
+    def get(self, *args, **kwargs):
+        return self.render("validwork/ask_for_leave.html")
+
+
+@sidebar("/validwork/overtime", "/validwork/overtime", "加班登记",
+         "tinyms.sidebar.validwork.sub.overtime.show")
+@route("/validwork/overtime")
+class OvertimeController(IAuthRequest):
+    def get(self, *args, **kwargs):
+        return self.render("validwork/overtime.html")
 
 @sidebar("/validwork", "/validwork/schedule/task", "考勤系统", "tinyms.sidebar.validwork.main.show", 0, "icon-calendar")
 @sidebar("/validwork/schedule_task", "/validwork/schedule/task", "任务计划",
@@ -78,7 +93,7 @@ class MachineController(IAuthRequest):
 #日明细报表
 @sidebar("/validwork/report", "/validwork/report/day_details", "报表", "tinyms.sidebar.validwork.sub.machine.show")
 @route("/validwork/report/day_details")
-class DayDetailsReport(IAuthRequest):
+class DayDetailsReportController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/report_day_details.html")
 
@@ -144,13 +159,13 @@ class DayDetailsReportDataProvider():
 
 #月分组汇总
 @route("/validwork/report/month_groupby")
-class MonthGroupByReport(IAuthRequest):
+class MonthGroupByReportController(IAuthRequest):
     def get(self, *args, **kwargs):
         return self.render("validwork/report_month_details.html")
 
 
 @route("/validwork/download/client")
-class DownloadFingerClient(IAuthRequest):
+class DownloadFingerClientController(IAuthRequest):
     def get(self, *args, **kwargs):
         file = self.pack_client()
         self.set_header("Content-Disposition", "attachment; filename=指纹采集助手.zip")
@@ -455,7 +470,7 @@ class FingerSignTest(IRequest):
 
 # GET /iclock/cdata?SN=xxxxxx
 @route("/iclock/cdata")
-class IClockCData(IRequest):
+class IClockCDataController(IRequest):
     def post(self, *args, **kwargs):
 
         #记录机器访问数据
@@ -570,7 +585,7 @@ class IClockCData(IRequest):
 #GET /iclock/getrequest?SN=xxxxxx
 #服务器发送到考勤机命令处理
 @route("/iclock/getrequest")
-class IClockCommand(IRequest):
+class IClockCommandController(IRequest):
     def get(self, *args, **kwargs):
         self.set_header("Content-Type", "text/plain;charset=utf-8")
         params_ = self.wrap_params_to_dict()
@@ -603,7 +618,7 @@ class IClockCommand(IRequest):
 # POST /iclock/devicecmd?SN=xxxxxx&&ID=iiii&Return=vvvv&CMD=ssss
 #机器执行完命令后的反馈
 @route("/iclock/devicecmd")
-class IClockDeviceCommandReturn(IRequest):
+class IClockDeviceCommandReturnController(IRequest):
     def post(self, *args, **kwargs):
         print(self.request.arguments)
         print(self.request.files)

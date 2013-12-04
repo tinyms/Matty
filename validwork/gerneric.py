@@ -165,6 +165,8 @@ class ValidWorkPoints():
         reg_point("tinyms.sidebar.validwork.sub.scheduletask.show", "菜单", "考勤", "任务计划")
         reg_point("tinyms.sidebar.validwork.sub.timeblock.show", "菜单", "考勤", "班次/时间段")
         reg_point("tinyms.sidebar.validwork.sub.fingertemplate.show", "菜单", "考勤", "指纹模版")
+        reg_point("tinyms.sidebar.validwork.sub.askforleave.show", "菜单", "考勤", "请假")
+        reg_point("tinyms.sidebar.validwork.sub.overtime.show", "菜单", "考勤", "加班")
         reg_point("tinyms.sidebar.validwork.sub.hodiday.show", "菜单", "考勤", "节日")
         reg_point("tinyms.sidebar.validwork.sub.machine.show", "菜单", "考勤", "考勤机管理")
 
@@ -176,12 +178,14 @@ class ValidWorkPoints():
         reg_point("tinyms.validwork.entity.ValidWorkScheduleTask.delete", "考勤", "任务计划", "删除任务计划")
         reg_point("tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.view", "考勤", "任务计划", "查看班次/时间段")
         reg_point("tinyms.validwork.entity.ValidWorkScheduleTask.TimeBlock.edit", "考勤", "任务计划", "编辑班次/时间段/任务计划")
+
         #班次/时间段
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.list", "考勤", "班次/时间段", "查看任务计划列表")
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.view", "考勤", "班次/时间段", "查看任务计划明细")
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.add", "考勤", "班次/时间段", "添加任务计划")
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.update", "考勤", "班次/时间段", "修改任务计划")
         reg_point("tinyms.validwork.entity.ValidWorkTimeBlock.delete", "考勤", "班次/时间段", "删除任务计划")
+
         #指纹模版
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.list", "考勤", "指纹模版", "查看指纹模版列表")
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.view", "考勤", "指纹模版", "查看指纹模版明细")
@@ -189,12 +193,28 @@ class ValidWorkPoints():
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.update", "考勤", "指纹模版", "修改指纹模版")
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.delete", "考勤", "指纹模版", "删除指纹模版")
         reg_point("tinyms.validwork.entity.ValidWorkFingerTemplate.edit", "考勤", "指纹模版", "指纹录入")
+
         #节日
         reg_point("tinyms.validwork.entity.Holiday.list", "考勤", "节日", "查看节日列表")
         reg_point("tinyms.validwork.entity.Holiday.view", "考勤", "节日", "查看节日明细")
         reg_point("tinyms.validwork.entity.Holiday.add", "考勤", "节日", "添加节日")
         reg_point("tinyms.validwork.entity.Holiday.update", "考勤", "节日", "修改节日")
         reg_point("tinyms.validwork.entity.Holiday.delete", "考勤", "节日", "删除节日")
+
+        #请假
+        reg_point("tinyms.validwork.entity.AskForLeave.list", "考勤", "请假", "查看请假列表")
+        reg_point("tinyms.validwork.entity.AskForLeave.view", "考勤", "请假", "查看请假明细")
+        reg_point("tinyms.validwork.entity.AskForLeave.add", "考勤", "请假", "添加请假")
+        reg_point("tinyms.validwork.entity.AskForLeave.update", "考勤", "请假", "修改请假")
+        reg_point("tinyms.validwork.entity.AskForLeave.delete", "考勤", "请假", "删除请假")
+
+        #加班
+        reg_point("tinyms.validwork.entity.Overtime.list", "考勤", "加班", "查看加班列表")
+        reg_point("tinyms.validwork.entity.Overtime.view", "考勤", "加班", "查看加班明细")
+        reg_point("tinyms.validwork.entity.Overtime.add", "考勤", "加班", "添加加班")
+        reg_point("tinyms.validwork.entity.Overtime.update", "考勤", "加班", "修改加班")
+        reg_point("tinyms.validwork.entity.Overtime.delete", "考勤", "加班", "删除加班")
+
         #考勤机管理
         reg_point("tinyms.validwork.entity.ValidWorkMachine.list", "考勤", "考勤机管理", "查看考勤机列表")
         reg_point("tinyms.validwork.entity.ValidWorkMachine.update", "考勤", "考勤机管理", "修改考勤机")

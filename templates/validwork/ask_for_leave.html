@@ -1,23 +1,18 @@
 {% extends "../workbench/master.html" %}
-{% block title %}节日{% end %}
+{% block title %}请假登记{% end %}
 {% block header %}
-<script src="{{ static_url('jslib/datepicker/js/bootstrap-datepicker.js') }}"></script>
-<link rel="stylesheet" href="{{ static_url('jslib/datepicker/css/datepicker.css') }}">
 <script type="text/javascript">
-    $(document).ready(function(){
-        $(".date").datepicker({format:"yyyy-mm-dd"});
-    });
 </script>
 {% end %}
 {% block workspace %}
 <section class="main padder">
     <div class="clearfix">
-        <h4><i class="icon-book"></i>节日</h4>
+        <h4><i class="icon-book"></i>请假登记</h4>
     </div>
     <div class="row">
         <div class="col-lg-12">
             <div class="panel">
-                <div class="panel-heading">节日列表</div>
+                <div class="panel-heading">请假列表</div>
                 <div class="panel-body">
                     {% module DataTable(id="HolidayDataTable",
                                         entity="validwork.entity.Holiday",
