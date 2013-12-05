@@ -2,7 +2,7 @@ __author__ = 'tinyms'
 
 import json
 from tornado.web import RequestHandler
-from tinyms.core.common import JsonEncoder
+from tinyms.core.common import Utils
 from tinyms.core.annotation import EmptyClass, ObjectPool, route
 from tinyms.core.cache import CacheManager
 from tinyms.dao.account import AccountHelper
@@ -174,7 +174,7 @@ class ApiHandler(IRequest):
                     setattr(obj, "param", lambda key: obj.__params__.get(key))
                     func = getattr(obj, method_name)
                     result = func()
-                    self.write(json.dumps(result, cls=JsonEncoder))
+                    self.write(Utils.encode(result))
 
 
 @route(r"/ajax/(.*).js")
@@ -224,13 +224,24 @@ class AjaxHandler(IRequest):
                     func = getattr(obj, method_name)
                     result = func()
                     if data_type == "json":
-                        self.write(json.dumps(result, cls=JsonEncoder))
+                        self.write(Utils.encode(result))
                     else:
                         self.write(result)
 
 
 @route("/autocomplete/(.*)")
 class AutoCompleteHandler(IRequest):
+    def get(self, id_):
+        cls = ObjectPool.autocomplete_keys.get(id_)
+        self.set_header("Content-Type", "text/json;charset=utf-8")
+        if cls:
+            obj = cls()
+            if hasattr(obj, "text"):
+                text = obj.text(self.get_argument("id"), self)
+                self.write(Utils.encode([text]))
+        else:
+            self.write(Utils.encode([""]))
+
     def post(self, id_):
         cls = ObjectPool.autocomplete_keys.get(id_)
         self.set_header("Content-Type", "text/json;charset=utf-8")
@@ -238,7 +249,7 @@ class AutoCompleteHandler(IRequest):
             obj = cls()
             if hasattr(obj, "data"):
                 search_word = self.get_argument("search_word")
-                data = obj.data(self, search_word)
-                self.write(json.dumps(data, cls=JsonEncoder))
+                data = obj.data(search_word, self)
+                self.write(Utils.encode(data))
         else:
-            self.write(json.dumps(list(), cls=JsonEncoder))
+            self.write(Utils.encode(list()))

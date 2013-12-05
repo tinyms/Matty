@@ -2,6 +2,8 @@
 {% block title %}加班登记{% end %}
 {% block header %}
 <script type="text/javascript">
+    $(document).ready(function(){
+    });
 </script>
 {% end %}
 {% block workspace %}
@@ -18,7 +20,7 @@
                                         view="validwork.view.Overtime",
                                         cols=['name','start_datetime','end_datetime','creator','create_datetime'],
                                         titles=['姓名','开始时间','结束时间','经手人','登记时间'],
-                                        autoform=True,
+                                        autoform=False,
                                         search_tip = "可搜索请假人姓名",
                                         point_list = "tinyms.validwork.entity.Overtime.list",
                                         point_view = "tinyms.validwork.entity.Overtime.view",
@@ -29,23 +31,27 @@
                     {% module panel_start("OvertimeDataView") %}
                     {% module datagrid_form_start("OvertimeDataView") %}
                     <div class="form-group">
-                    <label for="name" class="col-lg-3 control-label">加班人</label>
+                    <label for="archives_id" class="col-lg-3 control-label">加班人</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control" id="name" name="name">
+                    {% module AutoComplete(id="archives_id"
+                                                ,item_tpl="<li data-value='${name}' data-key='${id}'>${name}<i>(${email})</i></li>"
+                                                ,provider="tinyms.core.ac.FindArchivesAutoComplete"
+                                                ,placeholder="根据姓名、邮箱、别名、人员编码搜索"
+                                                ) %}
                     </div>
                     </div>
 
                     <div class="form-group">
                     <label for="start_datetime" class="col-lg-3 control-label">开始时间</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control" id="start_datetime" name="start_datetime" required>
+                    <input type="text" class="form-control" id="start_datetime" name="start_datetime" required value="{{ context['current_date'] }}">
                     </div>
                     </div>
 
                     <div class="form-group">
                     <label for="end_datetime" class="col-lg-3 control-label">结束时间</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control" id="end_datetime" name="end_datetime" required>
+                    <input type="text" class="form-control" id="end_datetime" name="end_datetime" required value="{{ context['current_date'] }}">
                     </div>
                     </div>
                     {% module datagrid_form_end("OvertimeDataView","validwork.view.Overtime","view") %}

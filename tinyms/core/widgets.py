@@ -3,12 +3,12 @@ __author__ = 'tinyms'
 import json
 from tornado.web import UIModule
 from tornado.util import import_object
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from tinyms.core.common import Utils, JsonEncoder
-from tinyms.core.annotation import ui, route, ObjectPool, EmptyClass
+from tinyms.core.annotation import ui, route, ObjectPool, EmptyClass, autocomplete
 from tinyms.core.orm import SessionFactory
 from tinyms.core.web import IRequest
-from tinyms.core.entity import Term, TermTaxonomy, Role
+from tinyms.core.entity import Term, TermTaxonomy, Role, Archives
 from tinyms.dao.account import AccountHelper
 
 
@@ -273,28 +273,28 @@ class DataTableHandler(IRequest):
             if not self.auth({point.view}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.view(id_)
         elif act == "save":
             if not self.auth({point.update}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.update(id_)
         elif act == "saveNext":
             if not self.auth({point.update}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.update(id_)
         elif act == "delete":
             if not self.auth({point.delete}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.delete(id_)
 
@@ -323,11 +323,11 @@ class DataTableHandler(IRequest):
                 custom_filter_obj.after_delete(cur_row, sf, self)
             message["success"] = True
             message["msg"] = "Deleted"
-            self.write(json.dumps(message))
+            self.write(Utils.encode(message))
         else:
             message["success"] = False
             message["msg"] = valid_msg
-            self.write(json.dumps(message))
+            self.write(Utils.encode(message))
 
     def view(self, id_):
         message = dict()
@@ -381,11 +381,11 @@ class DataTableHandler(IRequest):
                     custom_filter_obj.after_add(obj, sf, self)
                 message["success"] = True
                 message["msg"] = obj.id
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 message["success"] = False
                 message["msg"] = valid_msg
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
         else:
             message["flag"] = "update"
             sf = SessionFactory.new()
@@ -399,11 +399,11 @@ class DataTableHandler(IRequest):
                     custom_filter_obj.after_modify(cur_row, sf, self)
                 message["success"] = True
                 message["msg"] = "Updated"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 message["success"] = False
                 message["msg"] = valid_msg
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
 
     def list(self, id_):
         meta = DataTableModule.__entity_mapping__.get(id_)
@@ -547,46 +547,48 @@ class DataViewHandler(IRequest):
             if not self.auth({point.view}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(json.dumps(message, cls=JsonEncoder))
             else:
                 self.view(id_)
         elif act == "save":
             if not self.auth({point.update}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.update(id_)
         elif act == "saveNext":
             if not self.auth({point.update}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.update(id_)
         elif act == "delete":
             if not self.auth({point.delete}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message))
+                self.write(Utils.encode(message))
             else:
                 self.delete(id_)
 
     def view(self, id_):
         message = dict()
-        message["success"] = True
+        message["success"] = False
         self.set_header("Content-Type", "text/json;charset=utf-8")
-        name = DataTableModule.__entity_mapping__.get(id_)
+        name = DataViewModule.__view_mapping__.get(id_)
         if not name:
             self.set_status(403, "Error!")
         custom_filter = ObjectPool.dataview_provider.get(name)
         rec_id = self.get_argument("id")
+        print(custom_filter, rec_id)
         if custom_filter:
             custom_filter_obj = custom_filter()
             if hasattr(custom_filter_obj, "view"):
                 dict_item = custom_filter_obj.view(rec_id, self)
+                message["success"] = True
                 message["msg"] = dict_item
-                self.write(json.dumps(message))
+                self.write(json.dumps(message, cls=JsonEncoder))
         else:
             message["msg"] = dict()
             self.write(message)
@@ -612,7 +614,7 @@ class DataViewHandler(IRequest):
                 else:
                     message["success"] = True
                     message["msg"] = "Deleted"
-        self.write(json.dumps(message))
+        self.write(Utils.encode(message))
 
     def update(self, id_):
         message = dict()
@@ -648,7 +650,7 @@ class DataViewHandler(IRequest):
                     message["success"] = True
                     message["msg"] = "Updated"
 
-        self.write(json.dumps(message))
+        self.write(Utils.encode(message))
 
     def list(self, id_):
         name = DataViewModule.__view_mapping__.get(id_)
@@ -879,3 +881,28 @@ class AutoComplete(IWidget):
 
     def embedded_javascript(self):
         return self.render_string("widgets/autocomplete.js")
+
+#查找账户自动完成
+@autocomplete("tinyms.core.ac.FindArchivesAutoComplete")
+class FindArchivesAutoComplete():
+    def data(self, search_word, req):
+        cnn = SessionFactory.new()
+        q = cnn.query(Archives.id, Archives.name, Archives.email)
+        q = q.filter(or_(Archives.name.like('%' + search_word + '%'), Archives.email.like('%' + search_word + '%'),
+                         Archives.alias.like('%' + search_word + '%'), Archives.code.like('%' + search_word + '%')))
+        all_ = q.limit(10).all()
+        items = list()
+        for row in all_:
+            item = dict()
+            item["id"] = row[0]
+            item["name"] = row[1]
+            item["email"] = row[2]
+            items.append(item)
+        return items
+
+    def text(self, id_, req):
+        sf = SessionFactory.new()
+        name = sf.query(Archives.name).filter(Archives.id==id_).scalar()
+        if name:
+            return name
+        return ""

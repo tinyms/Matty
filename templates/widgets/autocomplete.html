@@ -1,7 +1,12 @@
 <script type="text/javascript">
     $(document).ready(function(){
         autocomplete("{{id}}","{{key}}","{% raw item_tpl %}","{{at}}");
+        $("#{{ id }}").change(function(){
+            $.get("/autocomplete/{{key}}",{id:$("#{{id}}").val()},function(data){
+                $("#{{id}}_text").val(data[0]);
+            },"json");
+        });
     });
 </script>
 <input type="text" class="form-control" id="{{ id }}_text" name="{{ id }}_text" placeholder="{{placeholder}}"/>
-<input type="hidden" id="{{ id }}" name="{{ id }}"/>
+<input type="hidden" id="{{ id }}" name="{{ id }}" class="autocomplete_hide_val"/>

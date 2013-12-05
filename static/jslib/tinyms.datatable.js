@@ -252,6 +252,7 @@ function DataTableX(id_, entityName_, cols_, actionbar_render_) {
                         if (typeof(datatable_form_fill) != "undefined") {
                             datatable_form_fill(self.id, current_row);
                         }
+                        $("#" + self.id + "_form .autocomplete_hide_val").change();
                     } catch (e) {}
                 }
             });

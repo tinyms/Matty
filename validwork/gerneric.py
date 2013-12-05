@@ -3,7 +3,7 @@ __author__ = 'tinyms'
 from datetime import datetime, timedelta
 import threading
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, cast
 
 from tinyms.core.annotation import points, reg_point
 from tinyms.core.common import Utils
@@ -120,7 +120,7 @@ class ValidWorkSchedulerThread(threading.Thread):
             #当天是否已经安排完成
             e = sf.query(func.count(ValidWorkCheckOn.id)) \
                 .filter(ValidWorkCheckOn.task_id == task_id) \
-                .filter(func.DATE(ValidWorkCheckOn.valid_start_time) == current_datetime.date()).scalar()
+                .filter(cast(ValidWorkCheckOn.valid_start_time, DateTime) == Utils.format_date(current_datetime)).scalar()
 
             if e == 0:
                 #安排新的工作

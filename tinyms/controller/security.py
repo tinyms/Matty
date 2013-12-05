@@ -4,7 +4,7 @@ import json
 from sqlalchemy import or_
 from tinyms.core.common import Utils
 from tinyms.core.web import IAuthRequest
-from tinyms.core.annotation import route, ajax, auth, dataview_provider, autocomplete, datatable_provider
+from tinyms.core.annotation import route, ajax, auth, dataview_provider, datatable_provider
 from tinyms.core.orm import SessionFactory
 from tinyms.core.entity import SecurityPoint, Role, Account, Archives
 from tinyms.dao.account import AccountHelper
@@ -120,23 +120,6 @@ class RoleOrg(IAuthRequest):
             SecurityPoint.id.asc()).all()
         return items
 
-#查找账户自动完成
-@autocomplete("tinyms.core.ac.FindArchivesAutoComplete")
-class FindArchivesAutoComplete():
-    def data(self, req, search_word):
-        cnn = SessionFactory.new()
-        q = cnn.query(Archives.id, Archives.name, Archives.email)
-        q = q.filter(or_(Archives.name.like('%' + search_word + '%'), Archives.email.like('%' + search_word + '%'),
-                         Archives.alias.like('%' + search_word + '%'), Archives.code.like('%' + search_word + '%')))
-        all_ = q.limit(10).all()
-        items = list()
-        for row in all_:
-            item = dict()
-            item["id"] = row[0]
-            item["name"] = row[1]
-            item["email"] = row[2]
-            items.append(item)
-        return items
 
 @datatable_provider("tinyms.core.entity.Role")
 class RoleDataProvider():

@@ -30,7 +30,10 @@ class AskForLeaveController(IAuthRequest):
 @route("/validwork/overtime")
 class OvertimeController(IAuthRequest):
     def get(self, *args, **kwargs):
-        return self.render("validwork/overtime.html")
+        current_date = Utils.format_date(Utils.current_datetime())+" 00:00"
+        opt = dict()
+        opt["current_date"] = current_date
+        return self.render("validwork/overtime.html", context=opt)
 
 @sidebar("/validwork", "/validwork/schedule/task", "考勤系统", "tinyms.sidebar.validwork.main.show", 0, "icon-calendar")
 @sidebar("/validwork/schedule_task", "/validwork/schedule/task", "任务计划",
@@ -123,6 +126,7 @@ class OvertimeDataViewProvider():
             name = row[1]
             creator = row[2]
             item = dict()
+            item["id"] = ot.id
             item["start_datetime"] = Utils.format_datetime_short(ot.start_datetime)
             item["end_datetime"] = Utils.format_datetime_short(ot.end_datetime)
             item["create_datetime"] = Utils.format_datetime_short(ot.create_datetime)
@@ -131,13 +135,43 @@ class OvertimeDataViewProvider():
             items.append(item)
         return items
 
+    def add(self, http_req):
+        obj = ValidWorkOvertime()
+        http_req.wrap_entity(obj)
+        obj.creator = http_req.get_current_user()
+        obj.create_datetime = Utils.current_datetime()
+        sf = SessionFactory.new()
+        sf.add(obj)
+        sf.commit()
+        return obj.id
+
+    def modify(self, id_, http_req):
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkOvertime).get(id_)
+        if obj:
+            http_req.wrap_entity(obj)
+            obj.creator = http_req.get_current_user()
+            obj.create_datetime = Utils.current_datetime()
+            sf.commit()
+            return ""
+        return "failure"
+
+    def delete(self, id_, http_req):
+        sf = SessionFactory.new()
+        num = sf.query(ValidWorkOvertime).filter(ValidWorkOvertime.id == id_).delete(synchronize_session='fetch')
+        sf.commit()
+        if num > 0:
+            return ""
+        return "failure"
+
     def view(self, id_, http_req):
-        pass
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkOvertime).get(id_)
+        return obj.dict()
 
 @dataview_provider("validwork.view.report.DayReportView")
 class DayDetailsReportDataProvider():
     def count(self, search_text, http_req):
-        print(func)
         current_date = None
         sf = SessionFactory.new()
         subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
@@ -435,7 +469,6 @@ class FingerAndTaskAssign():
         peoples = sf.query(ValidWorkFingerTemplate.archives_id, Archives.name,
                            ValidWorkFingerTemplate.finger_index, ValidWorkFingerTemplate.tpl) \
             .join((Archives, ValidWorkFingerTemplate.archives)).all()
-        print(peoples)
         finger_tpl_list = list()
         for p in peoples:
             finger_tpl_list.append(p)
@@ -537,11 +570,9 @@ class IClockCDataController(IRequest):
                         items = line.split("\t")
                         if len(items) >= 2:
                             records.append((items[0], items[1]))
-                    print(records)
                     for r in records:
                         archives_id = r[0]
                         touch_time = datetime.strptime(r[1], "%Y-%m-%d %H:%M:%S")
-                        print(archives_id, touch_time)
                         self.detect_chkon_status(archives_id, touch_time)
                     self.write("OK")
 
@@ -656,8 +687,6 @@ class IClockCommandController(IRequest):
 @route("/iclock/devicecmd")
 class IClockDeviceCommandReturnController(IRequest):
     def post(self, *args, **kwargs):
-        print(self.request.arguments)
-        print(self.request.files)
         self.set_header("Content-Type", "text/plain;charset=utf-8")
         sn = self.get_argument("SN")
         id_ = self.get_argument("ID")
