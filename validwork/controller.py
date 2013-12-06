@@ -22,7 +22,11 @@ from validwork.entity import *
 @route("/validwork/askforleave")
 class AskForLeaveController(IAuthRequest):
     def get(self, *args, **kwargs):
-        return self.render("validwork/ask_for_leave.html")
+        current_date = Utils.format_date(Utils.current_datetime())
+        opt = dict()
+        opt["current_date"] = current_date + " 00:00"
+        opt["current_date_short"] = current_date
+        return self.render("validwork/ask_for_leave.html", context=opt)
 
 
 @sidebar("/validwork/overtime", "/validwork/overtime", "加班登记",
@@ -101,6 +105,7 @@ class DayDetailsReportController(IAuthRequest):
         return self.render("validwork/report_day_details.html")
 
 
+#加班登记数据提供
 @dataview_provider("validwork.view.Overtime")
 class OvertimeDataViewProvider():
     def count(self, kw, http_req):
@@ -169,6 +174,78 @@ class OvertimeDataViewProvider():
         obj = sf.query(ValidWorkOvertime).get(id_)
         return obj.dict()
 
+#加班登记数据提供
+@dataview_provider("validwork.view.AskForLeave")
+class AskForLeaveDataViewProvider():
+    def count(self, kw, http_req):
+        sf = SessionFactory.new()
+        q = sf.query(func.count(ValidWorkAskForLeave.id))\
+            .join(Archives, ValidWorkAskForLeave.archives_id == Archives.id)
+        if kw:
+            q = q.filter(Archives.name.contains(kw))
+        return q.limit(1).scalar()
+
+    def list(self, kw, start, limit, http_req):
+        sf = SessionFactory.new()
+        subq = sf.query(Archives.id, Archives.name).subquery()
+        q = sf.query(ValidWorkAskForLeave, Archives.name, subq.c.name.label("creator"))\
+            .join(Archives, ValidWorkAskForLeave.archives_id == Archives.id)\
+            .outerjoin(subq, ValidWorkAskForLeave.creator == subq.c.id)
+        if kw:
+            q = q.filter(Archives.name.contains(kw))
+        dataset = q.order_by(ValidWorkAskForLeave.id.desc()).offset(start).limit(limit).all()
+        items = list()
+        for row in dataset:
+            ot = row[0]
+            name = row[1]
+            creator = row[2]
+            item = dict()
+            item["id"] = ot.id
+            item["kind"] = ot.kind
+            item["ask_date"] = Utils.format_date(ot.ask_date)
+            item["start_datetime"] = Utils.format_datetime_short(ot.start_datetime)
+            item["end_datetime"] = Utils.format_datetime_short(ot.end_datetime)
+            item["create_datetime"] = Utils.format_datetime_short(ot.create_datetime)
+            item["name"] = name
+            item["creator"] = creator
+            items.append(item)
+        return items
+
+    def add(self, http_req):
+        obj = ValidWorkAskForLeave()
+        http_req.wrap_entity(obj)
+        obj.creator = http_req.get_current_user()
+        obj.create_datetime = Utils.current_datetime()
+        sf = SessionFactory.new()
+        sf.add(obj)
+        sf.commit()
+        return obj.id
+
+    def modify(self, id_, http_req):
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkAskForLeave).get(id_)
+        if obj:
+            http_req.wrap_entity(obj)
+            obj.creator = http_req.get_current_user()
+            obj.create_datetime = Utils.current_datetime()
+            sf.commit()
+            return ""
+        return "failure"
+
+    def delete(self, id_, http_req):
+        sf = SessionFactory.new()
+        num = sf.query(ValidWorkAskForLeave).filter(ValidWorkAskForLeave.id == id_).delete(synchronize_session='fetch')
+        sf.commit()
+        if num > 0:
+            return ""
+        return "failure"
+
+    def view(self, id_, http_req):
+        sf = SessionFactory.new()
+        obj = sf.query(ValidWorkAskForLeave).get(id_)
+        return obj.dict()
+
+#考勤日报表数据提供
 @dataview_provider("validwork.view.report.DayReportView")
 class DayDetailsReportDataProvider():
     def count(self, search_text, http_req):

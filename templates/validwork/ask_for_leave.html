@@ -1,7 +1,26 @@
 {% extends "../workbench/master.html" %}
 {% block title %}请假登记{% end %}
 {% block header %}
+<script src="{{ static_url('jslib/datepicker/js/bootstrap-datepicker.js') }}"></script>
+<link rel="stylesheet" href="{{ static_url('jslib/datepicker/css/datepicker.css') }}">
 <script type="text/javascript">
+    function datatable_render(id,k,v,row){
+        if(id=="AskForLeaveDataView"){
+            if(k=="kind"){
+                if(v==0){
+                    return "事假";
+                }else if(v==1){
+                    return "病假";
+                }else if(v==2){
+                    return "其它假";
+                }
+            }
+        }
+        return v;
+    }
+    $(document).ready(function(){
+        $(".date").datepicker({format:"yyyy-mm-dd"});
+    });
 </script>
 {% end %}
 {% block workspace %}
@@ -14,44 +33,71 @@
             <div class="panel">
                 <div class="panel-heading">请假列表</div>
                 <div class="panel-body">
-                    {% module DataTable(id="HolidayDataTable",
-                                        entity="validwork.entity.Holiday",
-                                        cols=['name','start_date','end_date'],
-                                        titles=['名称','开始日期','结束日期'],
-                                        autoform=False,
-                                        search_fields = ["name"],
-                                        search_tip = "可搜索节日名称",
-                                        point_list = "tinyms.validwork.entity.Holiday.list",
-                                        point_view = "tinyms.validwork.entity.Holiday.view",
-                                        point_add = "tinyms.validwork.entity.Holiday.add",
-                                        point_update = "tinyms.validwork.entity.Holiday.update",
-                                        point_delete = "tinyms.validwork.entity.Holiday.delete"
+                    {% module DataView(id="AskForLeaveDataView",
+                                        view="validwork.view.AskForLeave",
+                                        cols=['kind','name','start_datetime','end_datetime','ask_date','creator','create_datetime'],
+                                        titles=['类型','姓名','开始时间','结束时间','请假日期','经手人','登记时间'],
+                                        autoform=True,
+                                        search_tip = "可搜索请假人姓名",
+                                        point_list = "tinyms.validwork.entity.AskForLeave.list",
+                                        point_view = "tinyms.validwork.entity.AskForLeave.view",
+                                        point_add = "tinyms.validwork.entity.AskForLeave.add",
+                                        point_update = "tinyms.validwork.entity.AskForLeave.update",
+                                        point_delete = "tinyms.validwork.entity.AskForLeave.delete"
                                         ) %}
-                    {% module panel_start("HolidayDataTable") %}
-                    {% module datagrid_form_start("HolidayDataTable") %}
-
+                    {% module panel_start("AskForLeaveDataView") %}
+                    {% module datagrid_form_start("AskForLeaveDataView") %}
                     <div class="form-group">
-                    <label for="name" class="col-lg-3 control-label">名称</label>
+                    <label for="archives_id" class="col-lg-3 control-label">请假人</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control" id="name" name="name" required >
-                    </div>
-                    </div>
-
-                    <div class="form-group">
-                    <label for="start_date" class="col-lg-3 control-label">开始日期</label>
-                    <div class="col-lg-8">
-                    <input type="text" class="form-control date" id="start_date" name="start_date" required>
+                    {% module AutoComplete(id="archives_id"
+                                                ,item_tpl="<li data-value='${name}' data-key='${id}'>${name}<i>(${email})</i></li>"
+                                                ,provider="tinyms.core.ac.FindArchivesAutoComplete"
+                                                ,placeholder="根据姓名、邮箱、别名、人员编码搜索"
+                                                ) %}
                     </div>
                     </div>
 
                     <div class="form-group">
-                    <label for="end_date" class="col-lg-3 control-label">结束日期</label>
+                    <label for="start_datetime" class="col-lg-3 control-label">开始时间</label>
                     <div class="col-lg-8">
-                    <input type="text" class="form-control date" id="end_date" name="end_date" required>
+                    <input type="text" class="form-control" id="start_datetime" name="start_datetime" required value="{{ context['current_date'] }}">
                     </div>
                     </div>
 
-                    {% module datagrid_form_end("HolidayDataTable","validwork.entity.Holiday") %}
+                    <div class="form-group">
+                    <label for="end_datetime" class="col-lg-3 control-label">结束时间</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control" id="end_datetime" name="end_datetime" required value="{{ context['current_date'] }}">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="end_datetime" class="col-lg-3 control-label">原因</label>
+                    <div class="col-lg-8">
+                    <textarea class="form-control" id="reason" name="reason" required></textarea>
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="kind" class="col-lg-3 control-label">类型</label>
+                    <div class="col-lg-8">
+                    <select id="kind" name="kind" class="form-control">
+                        <option value="0">事假</option>
+                        <option value="1">病假</option>
+                        <option value="2">其它假</option>
+                    </select>
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="ask_date" class="col-lg-3 control-label">请假日期</label>
+                    <div class="col-lg-8">
+                    <input type="text" class="form-control date" id="ask_date" name="ask_date" value="{{context['current_date_short']}}">
+                    </div>
+                    </div>
+
+                    {% module datagrid_form_end("AskForLeaveDataView","validwork.view.AskForLeave","view") %}
                     {% module panel_end() %}
                 </div>
             </div>
