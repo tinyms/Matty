@@ -250,7 +250,80 @@ class AskForLeaveDataViewProvider():
 class DayDetailsReportDataProvider():
     def count(self, search_text, http_req):
         current_date = None
+        if not current_date:
+            current_date = Utils.format_date(Utils.current_datetime())
         sf = SessionFactory.new()
+        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
+        q = sf.query(func.count(ValidWorkCheckOn.id))\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .outerjoin(subq, subq.c.id == Archives.org_id)
+        if search_text:
+            q = q.filter(Archives.name.like('%'+search_text+'%'))
+        q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == current_date)
+        return q.scalar()
+
+    def list(self, search_text, start, limit, http_req):
+        current_date = None
+        if not current_date:
+            current_date = Utils.format_date(Utils.current_datetime())
+        sf = SessionFactory.new()
+        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
+        q = sf.query(ValidWorkCheckOn.id,
+                     Archives.code,
+                     Archives.name,
+                     ValidWorkTimeBlock.name,
+                     ValidWorkTimeBlock.start_time,
+                     ValidWorkTimeBlock.end_time,
+                     ValidWorkCheckOn.status_in,
+                     ValidWorkCheckOn.status_out,
+                     ValidWorkCheckOn.status_no_sign,
+                     ValidWorkCheckOn.check_in_time,
+                     ValidWorkCheckOn.check_out_time,
+                     subq.c.term_name).select_from(ValidWorkCheckOn)\
+            .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .outerjoin(subq, subq.c.id == Archives.org_id)
+        if search_text:
+            q = q.filter(Archives.name.like('%'+search_text+'%'))
+        q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == current_date)
+        ds = q.offset(start).limit(limit).all()
+        items = list()
+        for row in ds:
+            obj = EmptyClass()
+            obj.id = row[0]
+            obj.code = row[1]
+            obj.name = row[2]
+            obj.tb_name = row[3]
+            obj.start_time = Utils.format_time(row[4])
+            obj.end_time = Utils.format_time(row[5])
+            obj.status_in = row[6]
+            obj.status_out = row[7]
+            obj.status_no_sign = row[8]
+            obj.check_in_time = Utils.format_time(row[9])
+            obj.check_out_time = Utils.format_time(row[10])
+            obj.org_name = row[11]
+            items.append(obj.__dict__)
+        return items
+
+#考勤月报表数据提供
+@dataview_provider("validwork.view.report.MonthReportView")
+class MonthDetailsReportDataProvider():
+    def count(self, search_text, http_req):
+        current_date = None
+        if not current_date:
+            current_date = Utils.format_date(Utils.current_datetime())
+        cur_datetime = Utils.parse_datetime(current_date+" 00:00")
+        year = cur_datetime.year
+        month = cur_datetime.month
+        sf = SessionFactory.new()
+        #group by all people with the month
+        archives_subq = sf.query(ValidWorkCheckOn.archives_id, Archives.name)\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
+            .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
+            .group_by(ValidWorkCheckOn.archives_id).subquery()
+        #
+
         subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
         q = sf.query(func.count(ValidWorkCheckOn.id))\
             .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
@@ -259,7 +332,7 @@ class DayDetailsReportDataProvider():
         if search_text:
             q = q.filter(Archives.name.like('%'+search_text+'%'))
         if not current_date:
-            q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.current_datetime().date())
+            q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.format_date(Utils.current_datetime()))
         return q.scalar()
 
     def list(self, search_text, start, limit, http_req):
@@ -284,7 +357,7 @@ class DayDetailsReportDataProvider():
         if search_text:
             q = q.filter(Archives.name.like('%'+search_text+'%'))
         if not current_date:
-            q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.current_datetime().date())
+            q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.format_date(Utils.current_datetime()))
         ds = q.offset(start).limit(limit).all()
         items = list()
         for row in ds:

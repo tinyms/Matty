@@ -99,7 +99,7 @@ class ValidWorkSchedulerThread(threading.Thread):
         #标识-1的状态为旷工，这种情况是没有按指纹的，CheckOn 有效时间段结束时间已经过期的时候
         updates = sf.query(ValidWorkCheckOn) \
             .filter(or_(ValidWorkCheckOn.status_in == -1, ValidWorkCheckOn.status_out == -1)) \
-            .filter(ValidWorkCheckOn.valid_end_time < current_datetime).all()
+            .filter(ValidWorkCheckOn.valid_end_time < Utils.format_datetime(current_datetime)).all()
         for row in updates:
             row.status_no_sign = 1
         sf.commit()
@@ -120,7 +120,7 @@ class ValidWorkSchedulerThread(threading.Thread):
             #当天是否已经安排完成
             e = sf.query(func.count(ValidWorkCheckOn.id)) \
                 .filter(ValidWorkCheckOn.task_id == task_id) \
-                .filter(cast(ValidWorkCheckOn.valid_start_time, DateTime) == Utils.format_date(current_datetime)).scalar()
+                .filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.format_date(current_datetime)).scalar()
 
             if e == 0:
                 #安排新的工作
@@ -218,6 +218,10 @@ class ValidWorkPoints():
         #考勤机管理
         reg_point("tinyms.validwork.entity.ValidWorkMachine.list", "考勤", "考勤机管理", "查看考勤机列表")
         reg_point("tinyms.validwork.entity.ValidWorkMachine.update", "考勤", "考勤机管理", "修改考勤机")
+
+        #考勤报表
+        reg_point("tinyms.validwork.report.DayReportView.list", "考勤", "报表", "日报表")
+        reg_point("tinyms.validwork.report.MonthReportView.list", "考勤", "报表", "月报表")
 
 
         #启动任务分配管理器
