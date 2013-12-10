@@ -19,3 +19,7 @@ function autocomplete(id, provider, tpl, at) {
         }
     });
 }
+//回显自动完成的文本框值
+function autocomplete_text_show(id){
+    $("#"+id).change();
+}

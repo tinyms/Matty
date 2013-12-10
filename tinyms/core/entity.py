@@ -1,11 +1,12 @@
 __author__ = 'tinyms'
 
 from sqlalchemy import join, Column, Integer, String, DateTime, Text, Date, Numeric
-from tinyms.core.orm import Entity, Simplify, many_to_one, many_to_many
+from tinyms.core.orm import Entity, Simplify, many_to_one, many_to_many, entity_manager
 from sqlalchemy.orm import column_property
 
 
 #人员档案
+@entity_manager()
 class Archives(Entity, Simplify):
     #编码，工号
     code = Column(String(20))
@@ -87,7 +88,9 @@ class Archives(Entity, Simplify):
     leave_date = Column(Date())
     #accounts
 
+
 #学习经历
+@entity_manager()
 @many_to_one("Archives")
 class LearningExperience(Entity, Simplify):
     #开始日期
@@ -101,7 +104,9 @@ class LearningExperience(Entity, Simplify):
     #毕(结、肆)业
     finished = Column(String(10))
 
+
 #工作经历
+@entity_manager()
 @many_to_one("Archives")
 class WorkExperience(Entity, Simplify):
     #开始日期
@@ -113,7 +118,9 @@ class WorkExperience(Entity, Simplify):
     #职务
     post = Column(String(30))
 
+
 #培训经历
+@entity_manager()
 @many_to_one("Archives")
 class TrainingExperience(Entity, Simplify):
     #开始日期
@@ -125,7 +132,9 @@ class TrainingExperience(Entity, Simplify):
     #证书
     certificate = Column(String(60))
 
+
 #账户
+@entity_manager()
 @many_to_one("Archives")
 class Account(Entity, Simplify):
     login_name = Column(String(20), unique=True, nullable=False)
@@ -136,7 +145,9 @@ class Account(Entity, Simplify):
     #archives
     #roles
 
+
 #角色
+@entity_manager()
 @many_to_many("Account")
 class Role(Entity, Simplify):
     name = Column(String(60), unique=True, nullable=False)
@@ -144,7 +155,9 @@ class Role(Entity, Simplify):
     #securitypoints
     #accounts
 
+
 #安全点
+@entity_manager()
 @many_to_many("Role")
 class SecurityPoint(Entity, Simplify):
     key_ = Column(String(60), unique=True, nullable=False)
@@ -155,12 +168,15 @@ class SecurityPoint(Entity, Simplify):
 
 
 #分类字典
+@entity_manager()
 class Term(Entity, Simplify):
     name = Column(String(20), unique=True, nullable=False)
     slug = Column(String(20), nullable=False)
     #termtaxonomys
 
+
 #分类
+@entity_manager()
 @many_to_one("Term")
 @many_to_one("TermTaxonomy")
 class TermTaxonomy(Entity, Simplify):
@@ -192,6 +208,7 @@ class CategoryView(Entity):
 
 
 #全局设置
+@entity_manager()
 class Setting(Entity, Simplify):
     #owner一个是固定的root,其它为平台使用用户的登录ID
     owner_ = Column(String(20), nullable=False, unique=True)

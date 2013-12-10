@@ -7,10 +7,12 @@ from sqlalchemy import Column, Integer, ForeignKey, Table, String
 from sqlalchemy.orm import sessionmaker
 from tinyms.core.common import Utils
 
+
 Entity = declarative_base()
 
 
 class SessionFactory():
+    entitys = dict()
     __engine__ = None
     __table_name_prefix__ = "archx_"
 
@@ -30,6 +32,16 @@ class SessionFactory():
             Entity.metadata.create_all(SessionFactory.__engine__)
 
 
+def entity_manager():
+    def ref_pattern(cls):
+        if not SessionFactory.entitys.get(cls):
+            key = "%s.%s" % (cls.__module__, cls.__qualname__)
+            SessionFactory.entitys[cls.__tablename__] = key
+        return cls
+
+    return ref_pattern
+
+
 class Simplify():
     """
     简化实体创建及可以JSON化实体数据
@@ -38,6 +50,7 @@ class Simplify():
 
     @declared_attr
     def __tablename__(self):
+        print(self)
         return "%s%s" % (SessionFactory.__table_name_prefix__, self.__name__.lower())
 
     def dict(self, dict_=None):

@@ -12,7 +12,7 @@ import time
 import datetime
 import decimal
 from imp import find_module, load_module, acquire_lock, release_lock
-
+from tornado.template import Template
 import psycopg2
 import psycopg2.extras
 
@@ -184,17 +184,21 @@ class Utils():
         if not os.path.exists(f_name):
             return ""
         f = codecs.open(f_name, "r", "utf-8")
-        all = f.readlines()
+        all_ = f.readlines()
         f.close()
         if join:
-            return "".join(all)
+            return "".join(all_)
         return all
 
     @staticmethod
     def text_write(f_name, lines=[], suffix="\n"):
         f = codecs.open(f_name, "w+", "utf-8")
-        for line in lines:
-            f.write(line + suffix)
+        if isinstance(lines, list):
+            for line in lines:
+                f.write(line + suffix)
+        else:
+            f.write(lines)
+            f.write(suffix)
         f.close()
 
     @staticmethod
@@ -207,6 +211,17 @@ class Utils():
     @staticmethod
     def trim(text):
         return "".join(text.split())
+
+    @staticmethod
+    def render(tpl_text, context):
+        """
+        render a template
+        :param tpl_text: template text
+        :param context: dict object
+        :return: str
+        """
+        tpl = Template(tpl_text)
+        return tpl.generate(context)
 
     @staticmethod
     def md5(s):
@@ -326,7 +341,7 @@ class Utils():
 
     @staticmethod
     def encode(obj):
-        return json.dumps(obj)
+        return json.dumps(obj, cls=JsonEncoder)
 
     @staticmethod
     def decode(text):

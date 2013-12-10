@@ -81,16 +81,15 @@ class RoleOrg(IAuthRequest):
     def get(self, *args, **kwargs):
         context = dict()
         categories = self.role_categories()
-        all = list()
+        all_ = list()
         for c in categories:
             sub = list()
             groups = self.role_groups(c)
             for g in groups:
                 sub.append((g, self.points(c, g)))
-                pass
-            all.append((c, sub, Utils.md5(c)))
+            all_.append((c, sub, Utils.md5(c)))
 
-        context["categories"] = all
+        context["categories"] = all_
         context["roles_for_account"] = self.role_for_account()
         return self.render("workbench/role_org.html", data=context)
 

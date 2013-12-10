@@ -1,6 +1,8 @@
 __author__ = 'tinyms'
 from tinyms.core.entity import *
 from tinyms.bpm.entity import *
+from tinyms.dev.controller import *
+from tinyms.dev.dao import *
 from tinyms.controller.anonymous import *
 from tinyms.controller.dashboard import *
 from tinyms.controller.security import *

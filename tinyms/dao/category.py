@@ -77,7 +77,9 @@ class CategoryHelper():
         node = cnn.query(TermTaxonomy).filter(TermTaxonomy.id == id_).filter(
             TermTaxonomy.term.has(Term.name != "ROOT")).limit(1).scalar()
         path = node.path
-        cnn.query(TermTaxonomy).filter(TermTaxonomy.path.like(path+"%")).delete(synchronize_session="fetch")
+        items = cnn.query(TermTaxonomy).filter(TermTaxonomy.path.like(path+"%")).order_by(TermTaxonomy.id.desc())
+        for item in items:
+            cnn.delete(item)
         cnn.commit()
         if self.taxonomy == "Org":
             self.dph.delete("tinyms.treeview.%s.%s" % (self.taxonomy, id_))

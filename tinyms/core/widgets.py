@@ -20,8 +20,9 @@ class IWidget(UIModule):
 class VersionModule(IWidget):
     def render(self, *args, **kwargs):
         from datetime import datetime
+
         year = datetime.now().strftime("%Y")
-        return "&copy; TinyMS, Power by ArchX %s, v1.0" % year
+        return "&copy; TinyMS, Power by ArchX %s, v1.2" % year
 
 
 @ui("CurrentAccountName")
@@ -77,6 +78,7 @@ class SideBar(IWidget):
         context["archives_show"] = self.archives_show
         context["role_org_show"] = self.role_org_show
         context["sys_params_show"] = self.sys_params_show
+        context["dev"] = ObjectPool.mode_dev
         return self.render_string("workbench/sidebar.html", context=context)
 
     def children(self, path):
@@ -88,6 +90,7 @@ class SideBar(IWidget):
 
     def sort_menus(self, items):
         items.sort(key=lambda x: x[0])
+
 
 @ui("DataComboBox")
 class DataComboBoxModule(IWidget):
@@ -344,15 +347,15 @@ class DataTableHandler(IRequest):
             if item:
                 message["success"] = True
                 message["msg"] = item.dict()
-                self.write(message)
+                self.write(Utils.encode(message))
             else:
                 item = entity()
                 message["msg"] = item.dict()
-                self.write(message)
+                self.write(Utils.encode(message))
         else:
             item = entity()
             message["msg"] = item.dict()
-            self.write(message)
+            self.write(Utils.encode(message))
 
     def update(self, id_):
         message = dict()
@@ -547,7 +550,7 @@ class DataViewHandler(IRequest):
             if not self.auth({point.view}):
                 message["success"] = False
                 message["msg"] = "UnAuth"
-                self.write(json.dumps(message, cls=JsonEncoder))
+                self.write(Utils.encode(message))
             else:
                 self.view(id_)
         elif act == "save":
@@ -574,21 +577,19 @@ class DataViewHandler(IRequest):
 
     def view(self, id_):
         message = dict()
-        message["success"] = False
+        message["success"] = True
         self.set_header("Content-Type", "text/json;charset=utf-8")
         name = DataViewModule.__view_mapping__.get(id_)
         if not name:
             self.set_status(403, "Error!")
         custom_filter = ObjectPool.dataview_provider.get(name)
         rec_id = self.get_argument("id")
-        print(custom_filter, rec_id)
         if custom_filter:
             custom_filter_obj = custom_filter()
             if hasattr(custom_filter_obj, "view"):
                 dict_item = custom_filter_obj.view(rec_id, self)
-                message["success"] = True
                 message["msg"] = dict_item
-                self.write(json.dumps(message, cls=JsonEncoder))
+                self.write(Utils.encode(message))
         else:
             message["msg"] = dict()
             self.write(message)
@@ -882,6 +883,7 @@ class AutoComplete(IWidget):
     def embedded_javascript(self):
         return self.render_string("widgets/autocomplete.js")
 
+
 #查找账户自动完成
 @autocomplete("tinyms.core.ac.FindArchivesAutoComplete")
 class FindArchivesAutoComplete():
@@ -902,7 +904,7 @@ class FindArchivesAutoComplete():
 
     def text(self, id_, req):
         sf = SessionFactory.new()
-        name = sf.query(Archives.name).filter(Archives.id==id_).scalar()
+        name = sf.query(Archives.name).filter(Archives.id == id_).scalar()
         if name:
             return name
         return ""

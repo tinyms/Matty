@@ -46,15 +46,15 @@ class OrgEdit():
         tt = self.param("taxonomy")
         if not AccountHelper.auth(self.request.current_user,{ObjectPool.treeview[tt].delete}):
             return ["UnAuth"]
-        id = self.param("id")
+        id_ = self.param("id")
         category = CategoryHelper(tt)
-        return [category.remove(id)]
+        return [category.remove(id_)]
 
     def names(self):
-        idArray = self.param("idArray")
+        id_array = self.param("idArray")
         tt = self.param("taxonomy")
-        if idArray:
-            ids = Utils.parse_int_array(idArray)
+        if id_array:
+            ids = Utils.parse_int_array(id_array)
             names = list()
             category = CategoryHelper(tt)
             for id_ in ids:

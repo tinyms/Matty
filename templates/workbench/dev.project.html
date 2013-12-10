@@ -1,0 +1,41 @@
+{% extends "master.html" %}
+{% block title %}项目{% end %}
+{% block header %}
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#create_project_btn").click(function(){
+            var project_name = $("#project_name").val();
+            $.post("/api/com.tinyms.dev.project/create",{"name":project_name},function(data){
+                if(data[0]=="success"){
+                    toastr.success("创建成功!")
+                }else{
+                    toastr.success("创建失败!")
+                }
+
+            },"json");
+        });
+    });
+</script>
+{% end %}
+{% block workspace %}
+<section class="main padder">
+    <div class="clearfix">
+        <h4><i class="icon-folder-open"></i>Project</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel">
+                <div class="panel-heading">项目创建</div>
+                <div class="panel-body">
+                    <div class="input-group" style="width: 350px;">
+                        <input type="text" placeholder="小写英文项目姓名" class="form-control" id="project_name">
+                        <span class="input-group-btn">
+                          <button class="btn btn-primary" type="button" id="create_project_btn">创建</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% end %}

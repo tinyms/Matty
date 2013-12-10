@@ -1,6 +1,6 @@
 __author__ = 'tinyms'
 
-import json
+import os
 from tornado.web import RequestHandler
 from tinyms.core.common import Utils
 from tinyms.core.annotation import EmptyClass, ObjectPool, route
@@ -54,7 +54,6 @@ class IRequest(RequestHandler):
             self.clear_all_cookies()
         else:
             self.render("err.html", reason="服务器内部错误")
-
 
     def get_current_user(self):
         """
@@ -122,6 +121,9 @@ class IRequest(RequestHandler):
         for key in args:
             setattr(obj, key, self.get_argument(key))
         return obj
+
+    def get_webroot_path(self):
+        return os.path.dirname(self.get_template_path()) + "/"
 
 
 class IAuthRequest(IRequest):

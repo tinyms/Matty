@@ -16,6 +16,17 @@
         {% if context["sys_params_show"] %}
         <li><a href="/workbench/setting"><i class="icon-gears icon-xlarge"></i><span>参数设置</span></a></li>
         {% end %}
+        {% if context["dev"] %}
+        <li class="dropdown-submenu">
+        <a href="/workbench/dev/widgets"><i class="icon-legal icon-xlarge"></i><span>Develop</span></a>
+            <ul class="dropdown-menu">
+              <li><a href="/workbench/dev/project">Project</a></li>
+              <li><a href="/workbench/dev/widgets">Widgets</a></li>
+              <li><a href="/workbench/dev/entity">Entity</a></li>
+              <li><a href="{{static_url('theme/v.3.2.1/index.html')}}" target="_blank">Site Template</a></li>
+            </ul>
+        </li>
+        {% end %}
     </ul>
 </nav>
 <!-- / nav -->
