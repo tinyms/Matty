@@ -90,11 +90,23 @@ class ValidWorkSchedulerThread(threading.Thread):
         while True:
             ValidWorkSchedulerThread.organization_of_work()
             time.sleep(60 * 5)
-
+    #判断当天是不是节日，如果是节日则不安排工作
+    @staticmethod
+    def is_holiday(current_date_str):
+        sf = SessionFactory.new()
+        num = sf.query(func.count(Holiday.id))\
+            .filter(Holiday.start_date <= current_date_str).filter(Holiday.end_date >= current_date_str).scalar()
+        if num > 0:
+            return True
+        return False
     #线程后台定时运动，休眠5分钟
     @staticmethod
     def organization_of_work():
         current_datetime = Utils.current_datetime()
+        #是否为法定节日
+        isholiday = ValidWorkSchedulerThread.is_holiday(Utils.format_date(current_datetime))
+        if isholiday:
+            return
         sf = SessionFactory.new()
         #标识-1的状态为旷工，这种情况是没有按指纹的，CheckOn 有效时间段结束时间已经过期的时候
         updates = sf.query(ValidWorkCheckOn) \
