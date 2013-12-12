@@ -23,8 +23,8 @@
                 <div class="panel-body">
                     {% module DataView(id="ValidWorkMonthReportDataView",
                     view="validwork.view.report.MonthReportView",
-                    cols=['code','name','late','early_leave','nowork','code','code','code','code','org_name'],
-                    titles=['工号','姓名','迟到(次)','早退(次)','旷工(天)','加班','病假','事假','其它假','部门'],
+                    cols=['code','name','late_total','early_leave_total','no_work_total','overtime_total','askforleave_total1','askforleave_total2','askforleave_total3','org_name'],
+                    titles=['工号','姓名','迟到(次)','早退(次)','旷工(天)','加班(小时)','事假(天)','病假(天)','其它假(天)','部门'],
                     search_tip = "可搜索姓名",
                     point_list = "tinyms.validwork.report.MonthReportView.list"
                     ) %}

@@ -4,6 +4,8 @@ import json
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy import Column, Integer, ForeignKey, Table, String
+from sqlalchemy.sql.expression import FunctionElement
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from tinyms.core.common import Utils
 
@@ -217,3 +219,30 @@ def many_to_many(foreign_entity_name):
         return cls
 
     return ref_table
+
+#特别的数据库处理函数
+######################################################date diff######################################################
+
+
+#计算两个日期之间以分钟为单位的差值，返回整数
+class MinuteDiff(FunctionElement):
+    type = Integer()
+    name = "minute_diff"
+
+
+@compiles(MinuteDiff, 'mssql')
+def _mssql_minute_diff(element, compiler, **kw):
+    return "DATEDIFF(MINUTE, %s, %s)" % (compiler.process(element.clauses.clauses[0]),
+                                         compiler.process(element.clauses.clauses[1]))
+
+
+@compiles(MinuteDiff, 'mysql')
+def _mysql_minute_diff(element, compiler, **kw):
+    return "TIMESTAMPDIFF(MINUTE, %s, %s)" % (compiler.process(element.clauses.clauses[0]),
+                                              compiler.process(element.clauses.clauses[1]))
+
+
+@compiles(MinuteDiff, 'sqlite')
+def _mysql_minute_diff(element, compiler, **kw):
+    return "(julianday(%s) - julianday(%s))*24*60" % (compiler.process(element.clauses.clauses[0]),
+                                                      compiler.process(element.clauses.clauses[1]))

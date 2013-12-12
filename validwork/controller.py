@@ -10,7 +10,7 @@ from sqlalchemy import func, asc, cast
 
 from tinyms.core.web import IAuthRequest, IRequest
 from tinyms.core.annotation import route, sidebar, datatable_provider, ajax, auth, dataview_provider, api, EmptyClass
-from tinyms.core.orm import SessionFactory
+from tinyms.core.orm import SessionFactory, MinuteDiff
 from tinyms.core.common import Utils
 from tinyms.core.entity import Term, TermTaxonomy
 from validwork.gerneric import ValidWorkHelper
@@ -258,7 +258,7 @@ class DayDetailsReportDataProvider():
             .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
             .outerjoin(subq, subq.c.id == Archives.org_id)
         if search_text:
-            q = q.filter(Archives.name.like('%'+search_text+'%'))
+            q = q.filter(Archives.name.contains(search_text))
         q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == current_date)
         return q.scalar()
 
@@ -279,12 +279,14 @@ class DayDetailsReportDataProvider():
                      ValidWorkCheckOn.status_no_sign,
                      ValidWorkCheckOn.check_in_time,
                      ValidWorkCheckOn.check_out_time,
-                     subq.c.term_name).select_from(ValidWorkCheckOn)\
+                     subq.c.term_name,
+                     MinuteDiff(ValidWorkCheckOn.valid_start_time, ValidWorkCheckOn.valid_end_time).label("diff")
+                     ).select_from(ValidWorkCheckOn)\
             .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
             .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
             .outerjoin(subq, subq.c.id == Archives.org_id)
         if search_text:
-            q = q.filter(Archives.name.like('%'+search_text+'%'))
+            q = q.filter(Archives.name.contains(search_text))
         q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == current_date)
         ds = q.offset(start).limit(limit).all()
         items = list()
@@ -302,6 +304,7 @@ class DayDetailsReportDataProvider():
             obj.check_in_time = Utils.format_time(row[9])
             obj.check_out_time = Utils.format_time(row[10])
             obj.org_name = row[11]
+            obj.no_work_timediff = row[12]
             items.append(obj.__dict__)
         return items
 
@@ -316,64 +319,130 @@ class MonthDetailsReportDataProvider():
         year = cur_datetime.year
         month = cur_datetime.month
         sf = SessionFactory.new()
-        #group by all people with the month
-        archives_subq = sf.query(ValidWorkCheckOn.archives_id, Archives.name)\
+        #某月考勤人员，分组统计
+        q = sf.query(func.count(ValidWorkCheckOn.id))\
             .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
             .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
             .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
-            .group_by(ValidWorkCheckOn.archives_id).subquery()
-        #
+            .group_by(ValidWorkCheckOn.archives_id, Archives.name)
 
-        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
-        q = sf.query(func.count(ValidWorkCheckOn.id))\
-            .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
-            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
-            .outerjoin(subq, subq.c.id == Archives.org_id)
         if search_text:
-            q = q.filter(Archives.name.like('%'+search_text+'%'))
-        if not current_date:
-            q = q.filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.format_date(Utils.current_datetime()))
+            q = q.filter(Archives.name.contains(search_text))
+
         return q.scalar()
 
     def list(self, search_text, start, limit, http_req):
         current_date = None
-        sf = SessionFactory.new()
-        subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id).filter(TermTaxonomy.term_id == Term.id).subquery()
-        q = sf.query(ValidWorkCheckOn.id,
-                     Archives.code,
-                     Archives.name,
-                     ValidWorkTimeBlock.name,
-                     ValidWorkTimeBlock.start_time,
-                     ValidWorkTimeBlock.end_time,
-                     ValidWorkCheckOn.status_in,
-                     ValidWorkCheckOn.status_out,
-                     ValidWorkCheckOn.status_no_sign,
-                     ValidWorkCheckOn.check_in_time,
-                     ValidWorkCheckOn.check_out_time,
-                     subq.c.term_name).select_from(ValidWorkCheckOn)\
-            .join(ValidWorkTimeBlock, ValidWorkCheckOn.time_block_id == ValidWorkTimeBlock.id)\
-            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
-            .outerjoin(subq, subq.c.id == Archives.org_id)
-        if search_text:
-            q = q.filter(Archives.name.like('%'+search_text+'%'))
         if not current_date:
-            q = q.order_by(Archives.name).filter(cast(ValidWorkCheckOn.valid_start_time, Date) == Utils.format_date(Utils.current_datetime()))
-        ds = q.offset(start).limit(limit).all()
+            current_date = Utils.format_date(Utils.current_datetime())
+        cur_datetime = Utils.parse_datetime(current_date+" 00:00")
+        year = cur_datetime.year
+        month = cur_datetime.month
+
+        sf = SessionFactory.new()
+        #group by all people with the month
+        checkon_subq = sf.query(ValidWorkCheckOn.archives_id)\
+            .join(Archives, ValidWorkCheckOn.archives_id == Archives.id)\
+            .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
+            .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
+            .group_by(ValidWorkCheckOn.archives_id).subquery()
+
+        #迟到,早退,旷工,请假,加班分组统计
+        late_subq = sf.query(ValidWorkCheckOn.archives_id, (func.count(1)).label("total"))\
+            .filter(ValidWorkCheckOn.status_in == 1)\
+            .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
+            .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
+            .group_by(ValidWorkCheckOn.archives_id).subquery()
+
+        early_leave_subq = sf.query(ValidWorkCheckOn.archives_id, (func.count(1)).label("total"))\
+            .filter(ValidWorkCheckOn.status_out == 1)\
+            .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
+            .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
+            .group_by(ValidWorkCheckOn.archives_id).subquery()
+
+        no_work_subq = sf.query(ValidWorkCheckOn.archives_id,
+                                (func.sum(MinuteDiff(ValidWorkCheckOn.valid_start_time,
+                                                     ValidWorkCheckOn.valid_end_time))/(60*24)).label("total"))\
+            .filter(ValidWorkCheckOn.status_no_sign == 1)\
+            .filter(func.YEAR(ValidWorkCheckOn.valid_start_time) == year)\
+            .filter(func.MONTH(ValidWorkCheckOn.valid_start_time) == month)\
+            .group_by(ValidWorkCheckOn.archives_id).subquery()
+        #事假
+        askforleave_subq1 = sf.query(ValidWorkAskForLeave.archives_id,
+                                    (func.sum(MinuteDiff(ValidWorkAskForLeave.start_datetime,
+                                                         ValidWorkAskForLeave.end_datetime))/(60*24)).label("total"))\
+            .filter(func.YEAR(ValidWorkAskForLeave.start_datetime) == year)\
+            .filter(func.MONTH(ValidWorkAskForLeave.start_datetime) == month)\
+            .filter(ValidWorkAskForLeave.kind == 0)\
+            .group_by(ValidWorkAskForLeave.archives_id).subquery()
+        #病假
+        askforleave_subq2 = sf.query(ValidWorkAskForLeave.archives_id,
+                                    (func.sum(MinuteDiff(ValidWorkAskForLeave.start_datetime,
+                                                         ValidWorkAskForLeave.end_datetime))/(60*24)).label("total"))\
+            .filter(func.YEAR(ValidWorkAskForLeave.start_datetime) == year)\
+            .filter(func.MONTH(ValidWorkAskForLeave.start_datetime) == month)\
+            .filter(ValidWorkAskForLeave.kind == 1)\
+            .group_by(ValidWorkAskForLeave.archives_id).subquery()
+        #其它假
+        askforleave_subq3 = sf.query(ValidWorkAskForLeave.archives_id,
+                                    (func.sum(MinuteDiff(ValidWorkAskForLeave.start_datetime,
+                                                         ValidWorkAskForLeave.end_datetime))/(60*24)).label("total"))\
+            .filter(func.YEAR(ValidWorkAskForLeave.start_datetime) == year)\
+            .filter(func.MONTH(ValidWorkAskForLeave.start_datetime) == month)\
+            .filter(ValidWorkAskForLeave.kind == 2)\
+            .group_by(ValidWorkAskForLeave.archives_id).subquery()
+
+        overtime_subq = sf.query(ValidWorkOvertime.archives_id,
+                                    (func.sum(MinuteDiff(ValidWorkOvertime.start_datetime,
+                                                         ValidWorkOvertime.end_datetime))/60).label("total"))\
+            .filter(func.YEAR(ValidWorkOvertime.start_datetime) == year)\
+            .filter(func.MONTH(ValidWorkOvertime.start_datetime) == month)\
+            .group_by(ValidWorkOvertime.archives_id).subquery()
+
+        term_subq = sf.query(Term.name.label("term_name"), TermTaxonomy.id)\
+            .filter(TermTaxonomy.term_id == Term.id).subquery()
+
+        subq = sf.query(Archives.id, Archives.code, Archives.name, term_subq.c.term_name)\
+            .select_from(Archives).outerjoin(term_subq, Archives.org_id == term_subq.c.id).subquery()
+
+        q = sf.query(checkon_subq.c.archives_id,
+                     subq.c.code,
+                     subq.c.name,
+                     late_subq.c.total,
+                     early_leave_subq.c.total,
+                     no_work_subq.c.total,
+                     askforleave_subq1.c.total,
+                     askforleave_subq2.c.total,
+                     askforleave_subq3.c.total,
+                     overtime_subq.c.total,
+                     subq.c.term_name).select_from(checkon_subq)\
+            .outerjoin(late_subq, checkon_subq.c.archives_id == late_subq.c.archives_id)\
+            .outerjoin(early_leave_subq, checkon_subq.c.archives_id == early_leave_subq.c.archives_id)\
+            .outerjoin(no_work_subq, checkon_subq.c.archives_id == no_work_subq.c.archives_id)\
+            .outerjoin(askforleave_subq1, checkon_subq.c.archives_id == askforleave_subq1.c.archives_id)\
+            .outerjoin(askforleave_subq2, checkon_subq.c.archives_id == askforleave_subq2.c.archives_id)\
+            .outerjoin(askforleave_subq3, checkon_subq.c.archives_id == askforleave_subq3.c.archives_id)\
+            .outerjoin(overtime_subq, checkon_subq.c.archives_id == overtime_subq.c.archives_id)\
+            .join(subq, checkon_subq.c.archives_id == subq.c.id)
+
+        if search_text:
+            q = q.filter(checkon_subq.c.name.contains(search_text))
+
+        ds = q.order_by(checkon_subq.c.archives_id).offset(start).limit(limit).all()
         items = list()
         for row in ds:
             obj = EmptyClass()
             obj.id = row[0]
             obj.code = row[1]
             obj.name = row[2]
-            obj.tb_name = row[3]
-            obj.start_time = Utils.format_time(row[4])
-            obj.end_time = Utils.format_time(row[5])
-            obj.status_in = row[6]
-            obj.status_out = row[7]
-            obj.status_no_sign = row[8]
-            obj.check_in_time = Utils.format_time(row[9])
-            obj.check_out_time = Utils.format_time(row[10])
-            obj.org_name = row[11]
+            obj.late_total = row[3]
+            obj.early_leave_total = row[4]
+            obj.no_work_total = row[5]
+            obj.askforleave_total1 = row[6]
+            obj.askforleave_total2 = row[7]
+            obj.askforleave_total3 = row[8]
+            obj.overtime_total = row[9]
+            obj.org_name = row[10]
             items.append(obj.__dict__)
         return items
 
